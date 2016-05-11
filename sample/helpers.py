@@ -1,0 +1,1 @@
+num_rows = int(input("Rows: "))
