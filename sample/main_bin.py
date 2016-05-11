@@ -7,36 +7,37 @@ import numpy as np
 import itertools
 
 #settings
-num_rows = 20
-num_cols = 20
-num_agents = 4
+num_rows = 15
+num_cols = 15
+num_agents = 5
 iterations = 1
 do_plot = True
 
 path_len_counter = 0
-path = []
-ac = 0
+
 
 for i in xrange(iterations):
     M = maze_depth_first.generate_maze(num_rows,num_cols,True)
-    ac = agent_controller.AgentController(M,num_agents)
+    #M = maze.maze(num_rows,num_cols,1,1)
+    ac = agent_controller.AgentController(M,num_agents,do_agent_avoidance=1)
     ac.run_agents_bin()
-print(float(path_len_counter)/iterations)
 
 
 if do_plot:
-
-
-    print 'Anzahl an Pfaden:' + str(len(ac.paths_list))
     #print ac.agents_list[0].maze[:,:,5]
-    colors = itertools.cycle(["r", "b", "g"])
-    helper = 1
-    plt.figure(figsize=(10, 5))
-    plt.imshow(M[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
-    ac.paths_list.reverse()
-    for path_it in ac.paths_list:
-        y,x = zip(*path_it)
+    colors = itertools.cycle(["r", "b", "y"])
+    #plt.figure(figsize=(10, 5))
+    #plt.imshow(ac.maze_shared[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
+    plt.figure(figsize=(10, 10))
+    i=0
+    for agent in ac.agents_list:
+        plt.subplot(231+i)
+        plt.imshow(agent.traveled_map, cmap=plt.cm.binary, interpolation='nearest')
+        y,x = zip(*agent.path)
         plt.scatter(x,y, color=next(colors))
+        i += 1
+    plt.subplot(236)
+    plt.imshow(ac.maze_shared[:,:,3], cmap=plt.cm.binary, interpolation='nearest')
     plt.show()
 else:
     #plt.imshow(ac.maze_shared[:,:,5], cmap = plt.cm.binary, interpolation='nearest')

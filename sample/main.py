@@ -9,7 +9,7 @@ import itertools
 #settings
 num_rows = 20
 num_cols = 20
-num_agents = 3
+num_agents = 10
 iterations = 1
 do_plot = True
 
@@ -45,12 +45,10 @@ if do_plot:
     print 'Anzahl an Pfaden:' + str(len(ac.paths_list))
     #print ac.agents_list[0].maze[:,:,5]
     colors = itertools.cycle(["r", "b", "g"])
-    helper = 1
     for path_it in ac.paths_list:
         y,x = zip(*path_it)
-        x = [i * 10 + 2.5*helper for i in x]
-        y = [i * 10 + 2.5*helper for i in y]
-        helper += 1
+        x = [i * 10 + 5 for i in x]
+        y = [i * 10 + 5 for i in y]
         plt.scatter(x,y, color=next(colors))
     plt.show()
 else:
