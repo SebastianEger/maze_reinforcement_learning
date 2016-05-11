@@ -19,6 +19,7 @@ class AgentController:
         self.paths_list = []
         self.num_step_sum = 0
         self.do_agent_avoidance = do_agent_avoidance
+        self.path_to_finish_shared = 0
 
     def create_agents(self):
         for i in range(self.num_agents):
@@ -54,20 +55,19 @@ class AgentController:
                     agents_it.do_step()
             # check if someone reached the goal
             for agents_it in self.agents_list:
-                if agents_it.goal_reached:
+                if agents_it.goal_reached and not self.path_to_finish_shared:
                     # reverse path from winner
                     agents_it.path.reverse()
                     # finish run
                     for iter in self.agents_list:
                         iter.path_to_finish = agents_it.path
-                        iter.finish_known = True
-                        if not iter.goal_reached:
-                            iter.do_step()
+                        iter.set_plan_to_reach_goal()
                     agents_it.path.reverse()
+                    self.path_to_finish_shared = True
                     break
             # check if every one has reached the goal
             if all(i.goal_reached for i in self.agents_list):
-                #print 'All finished'
+                print 'All finished'
                 break
         # get all paths
         for agents_it in self.agents_list:
