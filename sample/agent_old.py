@@ -1,6 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 import maze
+import maze_depth_first
 
 
 def agent_function(maze_in, x=1, y=1):
@@ -63,7 +64,8 @@ def agent_function(maze_in, x=1, y=1):
     return path
 
 if __name__ == '__main__':
-    maze_mat = maze.maze()
+    maze_mat = maze.maze(20,20)
+    #maze_mat = maze_depth_first.generate_maze(20,20,True)
     path = agent_function(maze_mat,1,1)
     print len(path)
 

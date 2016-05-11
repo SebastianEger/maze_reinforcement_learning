@@ -1,9 +1,12 @@
 import random
 import numpy as np
+from itertools import chain
+import matplotlib.pyplot as plt
 
 
-def generate_maze(num_rows = 10, num_cols=10):
+def generate_maze(num_rows = 10, num_cols=10, convert = False):
     M = np.zeros((num_rows,num_cols,6), dtype=np.uint8)
+    Mbin = np.zeros((num_rows*3,num_cols*3,3), dtype=np.uint8)
     # The array M is going to hold the array information for each cell.
     # The first four coordinates tell if walls exist on those sides
     # and the fifth indicates if the cell has been visited in the search.
@@ -56,8 +59,40 @@ def generate_maze(num_rows = 10, num_cols=10):
 
 
     # Open the walls at the start and finish
-    #M[0,0,0] = 1
-    #M[num_rows-1,num_cols-1,2] = 1
+    # M[0,0,0] = 1
+    # M[num_rows-1,num_cols-1,2] = 1
     M[:,:,4] = 1
     M[:,:,5] = 1
-    return M
+
+    if convert:
+        # 0=binary maze, 1 visited yes/no, 2 blocked by agent?
+        for i in xrange(num_rows*3):
+            Mbin[i,:] = 1
+        for i in xrange(num_cols*3):
+            Mbin[:,i] = 1
+        l = chain.from_iterable(zip(*M))
+        helper_h = 0
+        helper_v = 0
+        for iter in list(l):
+            Mbin[helper_v+1,helper_h+1,0] = 0
+            Mbin[helper_v,helper_h+1,0] = not iter[1]
+            Mbin[helper_v+1,helper_h,0] = not iter[0]
+            Mbin[helper_v+2,helper_h+1,0] = not iter[3]
+            Mbin[helper_v+1,helper_h+2,0] = not iter[2]
+            helper_v += 3
+            if helper_v == num_rows*3:
+                helper_h += 3
+                helper_v = 0
+        Mbin[:,:,1] = 0
+        Mbin[:,:,2] = 0
+        return Mbin
+    else:
+        return M
+
+if __name__ == '__main__':
+
+    M = generate_maze(20,20,True)
+
+    plt.figure(figsize=(10, 5))
+    plt.imshow(M[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
+    plt.show()

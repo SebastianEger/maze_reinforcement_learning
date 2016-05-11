@@ -52,7 +52,7 @@ class Agent:
                 break
 
     def get_next_position(self):
-        if self.path[-2][0] - self.path[-1][0] < 0 or self.path[-1] == self.path[-2]:
+        if self.path[-2][0] - self.path[-1][0] < 0:
             if self.maze[self.y,self.x,0]:
                 if self.maze[self.y,self.x-1,5]:
                     self.x = self.x - 1
@@ -66,7 +66,7 @@ class Agent:
                 if self.maze[self.y-1,self.x,5]:
                     self.y = self.y - 1
         # coming from DOWN
-        elif self.path[-2][0] - self.path[-1][0] > 0 or self.path[-1] == self.path[-2]:
+        if self.path[-2][0] - self.path[-1][0] > 0:
             if self.maze[self.y,self.x,2]:
                 if self.maze[self.y,self.x+1,5]:
                     self.x = self.x + 1
@@ -80,7 +80,7 @@ class Agent:
                 if self.maze[self.y+1,self.x,5]:
                     self.y = self.y + 1
         # coming from LEFT
-        elif self.path[-2][1] - self.path[-1][1] < 0 or self.path[-1] == self.path[-2]:
+        if self.path[-2][1] - self.path[-1][1] < 0:
             if self.maze[self.y,self.x,3]:
                 if self.maze[self.y+1,self.x,5]:
                     self.y = self.y + 1
@@ -94,7 +94,7 @@ class Agent:
                 if self.maze[self.y,self.x-1,5]:
                     self.x = self.x - 1
         # coming from RIGHT
-        elif self.path[-2][1] - self.path[-1][1] > 0 or self.path[-1] == self.path[-2]:
+        if self.path[-2][1] - self.path[-1][1] > 0:
             if self.maze[self.y,self.x,1]:
                 if self.maze[self.y-1,self.x,5]:
                     self.y = self.y - 1
