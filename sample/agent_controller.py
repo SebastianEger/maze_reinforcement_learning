@@ -1,6 +1,8 @@
 import agent
 import agent_bin
 import numpy
+import time
+import matplotlib.pyplot as plt
 
 
 class AgentController:
@@ -17,7 +19,7 @@ class AgentController:
         self.num_agents = num_agents
         self.agents_list = []
         self.paths_list = []
-        self.num_step_sum = 0
+        self.num_steps = 0
         self.do_agent_avoidance = do_agent_avoidance
         self.path_to_finish_shared = 0
 
@@ -65,14 +67,25 @@ class AgentController:
                     agents_it.path.reverse()
                     self.path_to_finish_shared = True
                     break
-            # check if every one has reached the goal
+
             if all(i.goal_reached for i in self.agents_list):
                 print 'All finished'
                 break
         # get all paths
         for agents_it in self.agents_list:
             self.paths_list.append(agents_it.path)
-        self.num_step_sum = 0
+        self.num_steps = 0
         for path_it in self.paths_list:
-            if self.num_step_sum < len(path_it):
-                self.num_step_sum = len(path_it)
+            if self.num_steps < len(path_it):
+                self.num_steps = len(path_it)
+
+    def animate(self):
+        tstart = time.time()                   # for profiling
+        data=np.random.randn(10,10)
+        im=plt.imshow(data)
+
+        for i in numpy.arange(1,200):
+            data=numpy.random.randn(10,10)
+            im.set_data(data)
+            fig.canvas.draw()                         # redraw the canvas
+        print 'FPS:' , 200/(time.time()-tstart)

@@ -7,8 +7,8 @@ import numpy as np
 import itertools
 
 #settings
-num_rows = 20
-num_cols = 10
+num_rows = 25
+num_cols = 12
 num_agents = 7
 iterations = 1
 do_plot = True
@@ -21,6 +21,7 @@ for i in xrange(iterations):
     #M = maze.maze(num_rows,num_cols,1,1)
     ac = agent_controller.AgentController(M,num_agents,do_agent_avoidance=1)
     ac.run_agents_bin()
+    print str(ac.num_steps)
 
 if do_plot:
     #print ac.agents_list[0].maze[:,:,5]
@@ -40,6 +41,7 @@ if do_plot:
     plt.imshow(M[:,:,0]+ac.maze_shared[:,:,3], cmap=plt.cm.binary, interpolation='nearest')
     plt.show()
 else:
-    #plt.imshow(ac.maze_shared[:,:,5], cmap = plt.cm.binary, interpolation='nearest')
-    #plt.show()
+    plt.figure(figsize=(10, 10))
+    plt.imshow(M[:,:,0]+ac.maze_shared[:,:,3], cmap=plt.cm.binary, interpolation='nearest')
+    plt.show()
     pass

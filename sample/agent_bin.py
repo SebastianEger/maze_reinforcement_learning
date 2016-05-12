@@ -37,7 +37,8 @@ class Agent(object):
 
         # release our position
         if self.do_agent_avoidance:
-            self.maze[self.y,self.x,2] = 0 # release our last position
+            self.maze[self.y,self.x,2] = 0
+            self.maze[self.y,self.x,0] = 0 # release our last position
 
         self.do_fill_dead_ends()
 
@@ -45,11 +46,23 @@ class Agent(object):
         if self.finish_known:
             #print 'Agent #' + str(self.agent_number) + ' ' + str(len(self.path_to_reach_finish))
             # check if there is no agent
+
+            # check if we can skip part of the path
+            tmp_path  = []
+            tmp_path[:] = self.path_to_reach_finish
+            if [self.y,self.x] in self.path_to_reach_finish:
+                for it in tmp_path:
+                    if it == [self.y,self.x]:
+                        self.path_to_reach_finish.pop(0)
+                        break
+                    self.path_to_reach_finish.pop(0)
+
             if self.maze[self.path_to_reach_finish[0][0],self.path_to_reach_finish[0][1],2] == 0:
                 self.y = self.path_to_reach_finish[0][0]
                 self.x = self.path_to_reach_finish[0][1]
                 #print str(self.y) + '-' + str(self.x)
                 self.path_to_reach_finish.pop(0)
+
         else:
             if not self.get_next_position_nv():
                 self.get_next_position_nvbm()
@@ -60,22 +73,18 @@ class Agent(object):
         self.maze[self.y,self.x,1] = self.agent_number # mark position as visited
         self.traveled_map[self.y,self.x] += 1
         if self.do_agent_avoidance:
-            self.maze[self.y,self.x,2] = self.agent_number # set our position
+            self.maze[self.y,self.x,2] = self.agent_number
+            self.maze[self.y,self.x,0] = self.agent_number+1 # set our position
 
-        if len(self.path) > 6:
-            if self.path[-1] == self.path[-2] == self.path[-3] == self.path[-4] == self.path[-5]:
-                print '!Agent #' + str(self.agent_number) + " doesnt move!"
-                self.doesnt_move = 1
-            elif self.doesnt_move:
-                print '!Agent #' + str(self.agent_number) + " moves again!"
-                self.doesnt_move = 0
 
+        if abs(self.y-self.path[-1][0]) > 1 or abs(self.x-self.path[-1][1]) > 1:
+            raise Exception('Invalid step!')
         self.path.append([self.y,self.x])
 
         # check if finish is reached
         if (self.y == self.maze_size[0]-2 and self.x == self.maze_size[1]-2):
             self.path.pop(0)
-            print 'Agent #' + str(self.agent_number) + ' has reached the goal! Path len: ' + str(len(self.path))
+            #print 'Agent #' + str(self.agent_number) + ' has reached the goal! Path len: ' + str(len(self.path))
             if self.do_agent_avoidance:
                 self.maze[self.y,self.x,2] = 0
             self.goal_reached = True
@@ -244,14 +253,14 @@ class Agent(object):
         # get path we have to go back
         for pos1 in self.path:
             if pos1 in self.path_to_finish:
-                crossing = pos1
                 #print crossing
-                if self.maze[pos1[0],pos1[1],3] == 0:
-                    self.path_to_reach_finish.insert(0,pos1)
+                crossing = pos1
+                #if self.maze[pos1[0],pos1[1],3] == 0 or self.maze[self.y,self.x,3] > 0:
+                self.path_to_reach_finish.insert(0,pos1)
                 break
             else:
-                if self.maze[pos1[0],pos1[1],3] == 0:
-                    self.path_to_reach_finish.insert(0,pos1)
+                #if self.maze[pos1[0],pos1[1],3] == 0 or self.maze[self.y,self.x,3] > 0:
+                self.path_to_reach_finish.insert(0,pos1)
         self.path.reverse()
         self.path_to_reach_finish.reverse()
         # get path to reach the finish
@@ -259,11 +268,12 @@ class Agent(object):
             if pos2 == crossing:
                 break
             else:
-                if self.maze[pos2[0],pos2[1],3] == 0:
-                    final_path_tmp.append(pos2)
+                #if self.maze[pos2[0],pos2[1],3] == 0 or self.maze[self.y,self.x,3] > 0:
+                final_path_tmp.append(pos2)
         final_path_tmp.reverse()
         for iter in final_path_tmp:
             self.path_to_reach_finish.append(iter)
         self.finish_known = 1
+
 if __name__ == '__main__':
     pass
