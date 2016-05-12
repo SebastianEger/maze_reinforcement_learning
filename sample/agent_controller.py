@@ -1,8 +1,10 @@
-import agent
-import agent_bin
-import numpy
 import time
+
+import agents.agent_bin as agent_bin
 import matplotlib.pyplot as plt
+import numpy
+
+from sample.agents import agent
 
 
 class AgentController:
@@ -25,7 +27,7 @@ class AgentController:
 
     def create_agents(self):
         for i in range(self.num_agents):
-            self.agents_list.append(agent.Agent(self.maze_shared,[0,0],i+1))
+            self.agents_list.append(agent.Agent(self.maze_shared, [0, 0], i + 1))
             #print 'Agent #' + str(i+1) + ' created!'
 
     def run_agents(self):
@@ -45,7 +47,7 @@ class AgentController:
 
     def create_agents_bin(self):
         for i in range(self.num_agents):
-            self.agents_list.append(agent_bin.Agent(self.maze_shared,[1,1],i+1,self.do_agent_avoidance))
+            self.agents_list.append(agent_bin.Agent(self.maze_shared, [1, 1], i + 1, self.do_agent_avoidance))
             #print 'Agent #' + str(i+1) + ' created!'
 
     def run_agents_bin(self):

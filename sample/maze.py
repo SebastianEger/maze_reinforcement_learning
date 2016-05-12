@@ -1,10 +1,9 @@
-import agent_old
 import numpy
 from numpy.random import random_integers as rand
 
 def maze(width=81, height=51, complexity=.75, density=.75):
     # Only odd shapes
-    shape = ((height // 2) * 2 + 1, (width // 2) * 2 + 1,3)
+    shape = ((height // 2) * 2 + 1, (width // 2) * 2 + 1,5)
     # Adjust complexity and density relative to maze size
     complexity = int(complexity * (5 * (shape[0] + shape[1])))
     density    = int(density * ((shape[0] // 2) * (shape[1] // 2)))
@@ -29,4 +28,8 @@ def maze(width=81, height=51, complexity=.75, density=.75):
                     Z[y_, x_,0] = 1
                     Z[y_ + (y - y_) // 2, x_ + (x - x_) // 2,0] = 1
                     x, y = x_, y_
+    Z[:,:,1] = 0
+    Z[:,:,2] = 0
+    Z[:,:,3] = 0
+    Z[:,:,4] = 0
     return Z

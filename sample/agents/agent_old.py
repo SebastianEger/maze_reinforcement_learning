@@ -1,13 +1,13 @@
 import numpy
 import matplotlib.pyplot as plt
-import maze
-import maze_depth_first
+import sample.maze
+import sample.maze_depth_first
 
 
 def agent_function(maze_in, x=1, y=1):
     maze = numpy.empty_like(maze_in)
-    maze[:] = maze_in
-    mat_size = numpy.shape(maze)
+    sample.maze[:] = maze_in
+    mat_size = numpy.shape(sample.maze)
     path = [[y-1,x]]
     path.append([y,x])
 
@@ -16,40 +16,40 @@ def agent_function(maze_in, x=1, y=1):
             break
 
         if path[-2][0] - path[-1][0] < 0:
-            if not maze[y,x-1]:
+            if not sample.maze[y, x-1]:
                 x = x - 1
-            elif not maze[y+1,x]:
+            elif not sample.maze[y+1, x]:
                 y = y + 1
-            elif not maze[y,x+1]:
+            elif not sample.maze[y, x+1]:
                 x = x + 1
-            elif not maze[y-1,x]:
+            elif not sample.maze[y-1, x]:
                 y = y - 1
         if path[-2][0] - path[-1][0] > 0:
-            if not maze[y,x+1]:
+            if not sample.maze[y, x+1]:
                 x = x + 1
-            elif not maze[y-1,x]:
+            elif not sample.maze[y-1, x]:
                 y = y - 1
-            elif not maze[y,x-1]:
+            elif not sample.maze[y, x-1]:
                 x = x - 1
-            elif not maze[y+1,x]:
+            elif not sample.maze[y+1, x]:
                 y = y + 1
         if path[-2][1] - path[-1][1] < 0:
-            if not maze[y+1,x]:
+            if not sample.maze[y+1, x]:
                 y = y + 1
-            elif not maze[y,x+1]:
+            elif not sample.maze[y, x+1]:
                 x = x + 1
-            elif not maze[y-1,x]:
+            elif not sample.maze[y-1, x]:
                 y = y - 1
-            elif not maze[y,x-1]:
+            elif not sample.maze[y, x-1]:
                 x = x - 1
         if path[-2][1] - path[-1][1] > 0:
-            if not maze[y-1,x]:
+            if not sample.maze[y-1, x]:
                 y = y - 1
-            elif not maze[y,x-1]:
+            elif not sample.maze[y, x-1]:
                 x = x - 1
-            elif not maze[y+1,x]:
+            elif not sample.maze[y+1, x]:
                 y = y + 1
-            elif not maze[y,x+1]:
+            elif not sample.maze[y, x+1]:
                 x = x + 1
 
         next_position = [y,x]
@@ -58,13 +58,13 @@ def agent_function(maze_in, x=1, y=1):
             break
         for item in path:
             if item == next_position:
-                maze[path[-1][0],path[-1][1]] = 1
+                sample.maze[path[-1][0], path[-1][1]] = 1
         path.append(next_position)
     path.pop(0)
     return path
 
 if __name__ == '__main__':
-    maze_mat = maze.maze(20,20)
+    maze_mat = sample.maze.maze(20, 20)
     #maze_mat = maze_depth_first.generate_maze(20,20,True)
     path = agent_function(maze_mat,1,1)
     print len(path)

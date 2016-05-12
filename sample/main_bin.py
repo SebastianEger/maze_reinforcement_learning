@@ -7,8 +7,8 @@ import numpy as np
 import itertools
 
 #settings
-num_rows = 25
-num_cols = 12
+num_rows = 15
+num_cols = 15
 num_agents = 7
 iterations = 1
 do_plot = True
@@ -35,13 +35,13 @@ if do_plot:
         plt.subplot(241+i)
         plt.imshow(agent.traveled_map, cmap=plt.cm.binary, interpolation='nearest')
         y,x = zip(*agent.path)
-        plt.scatter(x,y, color=next(colors), alpha=0.2,)
+        #plt.scatter(x,y, color=next(colors), alpha=0.2,)
         i += 1
     plt.subplot(248)
-    plt.imshow(M[:,:,0]+ac.maze_shared[:,:,3], cmap=plt.cm.binary, interpolation='nearest')
+    plt.imshow(M[:,:,0]+ac.maze_shared[:,:,2], cmap=plt.cm.binary, interpolation='nearest')
     plt.show()
 else:
     plt.figure(figsize=(10, 10))
-    plt.imshow(M[:,:,0]+ac.maze_shared[:,:,3], cmap=plt.cm.binary, interpolation='nearest')
+    plt.imshow(M[:,:,0]+ac.maze_shared[:,:,2], cmap=plt.cm.binary, interpolation='nearest')
     plt.show()
     pass
