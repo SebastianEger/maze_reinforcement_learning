@@ -24,6 +24,7 @@ class AgentController:
         self.num_steps = 0
         self.do_agent_avoidance = do_agent_avoidance
         self.path_to_finish_shared = 0
+        self.create_agents_bin()
 
     def create_agents(self):
         for i in range(self.num_agents):
@@ -51,7 +52,6 @@ class AgentController:
             #print 'Agent #' + str(i+1) + ' created!'
 
     def run_agents_bin(self):
-        self.create_agents_bin()
         while True:
             # every agents does one step
             for agents_it in self.agents_list:

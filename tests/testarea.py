@@ -1,6 +1,5 @@
-b = range(5, 1, -1)
+actions = [-1,0,-0.5,-0.3]
 
-for a in range(5, 1, -1):
-    for i in range(a):
-        print i
-    print '---'
+indices = [i[0] for i in sorted(enumerate(actions), key=lambda x:x[1],reverse=True)]
+
+print indices
