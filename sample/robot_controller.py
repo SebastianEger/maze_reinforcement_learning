@@ -4,7 +4,6 @@ import numpy
 import robot
 import robot_2
 import simulation
-from sample.simulation.mazes import maze_generator
 
 
 class RobotController:
@@ -64,19 +63,3 @@ class RobotController:
     def set_q_matrix(self, m):
         for _ in self.robot_list:
             _.use_q_matrix = m
-
-
-if __name__ == '__main__':
-
-    maze = maze_generator.get_static_maze_1()
-    rc = RobotController(3,maze,0)
-    sim = simulation.Simulation(rc,maze)
-    sim.refresh_rate = 0
-    sim.do_plot = False
-    print sim.run_simulation()
-    plt.figure(figsize=(10, 10))
-    plt.imshow(rc.robot_list[0].traveled_map[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
-    print rc.robot_list[0].traveled_map[:,:,0]
-    y,x = zip(*rc.robot_list[0].history)
-    plt.scatter(x,y, color='b', alpha=0.2,)
-    plt.show()
