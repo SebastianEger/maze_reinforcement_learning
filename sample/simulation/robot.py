@@ -12,9 +12,9 @@ class Robot:
         self.radius = 5  # [cm]
         self.speed = 0  # [m/s]
         self.turn_rate = 0  # [w]
-        self.current_position = [1,1,2]  # y-axis, x-axis, orientation [cm]
+        self.c_p = [1,1,2]  # y-axis, x-axis, orientation [cm]
         self.old_position = [0,0,2]
-        self.next_position = [0,0,2]
+        self.n_p = [0,0,2]
         self.goal_position = [10,10,2]
         self.history = []
         self.robot_list = []    # contains the other created robots
@@ -23,10 +23,7 @@ class Robot:
 
         """ Q learning settings """
         self.q_matrix_size = []
-        self.q_matrix_1 = numpy.zeros((5,5),dtype=numpy.float)  # orientation x row x col
-        self.q_matrix_2 = numpy.zeros((5,5),dtype=numpy.float)  # row x col
-        self.q_matrix_3 = numpy.zeros((4,4),dtype=numpy.float)  # last action
-        self.use_q_matrix = 1
+        self.q_m = numpy.zeros((5,5),dtype=numpy.float)  # orientation x row x col
         self.learn_rate = 0.2
         self.discount = 0.9
         self.exploration_mode = 1
@@ -54,8 +51,7 @@ class Robot:
 
     def init_q_matrix(self,maze):
         self.q_matrix_size = numpy.shape(maze)
-        self.q_matrix_1 = numpy.zeros((4*self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
-        self.q_matrix_2 = numpy.zeros((self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
+        self.q_m = numpy.zeros((4*self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
 
     def get_reward(self,action):
         next_pos = self.get_next_pos(action)
@@ -68,8 +64,8 @@ class Robot:
                 self.update_q_matrix(action,next_pos,self.reward_step)
             return next_pos
         else:
-            for _ in self.robot_list:
-                if next_pos[0] == _.current_position[0] and next_pos[1] == _.current_position[1]:
+            for _ in self.robot_list:  # check if its a robot
+                if next_pos[0] == _.c_p[0] and next_pos[1] == _.c_p[1]:
                     self.update_q_matrix(action,next_pos,self.reward_robot)
                     return next_pos
             self.update_q_matrix(action,next_pos,self.reward_wall)
@@ -78,33 +74,24 @@ class Robot:
     def do_action(self):   # function for getting the next action
         # exploration
         if numpy.random.random_sample(1) <= self.exploration_rate:
-            return self.do_exploration(self.exploration_mode)
+            return self.explore(self.exploration_mode)
         # use q learning
         else:
             rows = self.q_matrix_size[0]
             col = self.q_matrix_size[1]
 
             actions = []
-            if self.use_q_matrix == 1:
-                ind = self.current_position[2]*rows*col+self.current_position[1]*rows+self.current_position[0]
-                actions = list(self.q_matrix_1[ind,:])
-                # print actions
-            elif self.use_q_matrix == 2:
-                ind = self.current_position[1]*rows+self.current_position[0]
-                actions = list(self.q_matrix_2[ind,:])
-            elif self.use_q_matrix == 3:
-                actions = list(self.q_matrix_3[self.current_position[2],:])
-
+            ind = self.c_p[2]*rows*col+self.c_p[1]*rows+self.c_p[0]
+            actions = list(self.q_m[ind,:])
             indices = [i[0] for i in sorted(enumerate(actions), key=lambda x:x[1],reverse=True)]
-            # indices.reverse()
             for _ in indices:
                 if self.check_action(_):
                     return self.get_reward(_)
                 else:
                     self.get_reward(_)
-            return self.current_position
+            return self.c_p
 
-    def do_exploration(self,mode):
+    def explore(self,mode):
         if mode == 0:
             action_list = []
             for _ in range(4):
@@ -163,98 +150,87 @@ class Robot:
                 else:
                     self.update_q_matrix(action,next_pos,self.reward_wall)
             # stay
-            return self.current_position
+            return self.c_p
 
     def update_q_matrix(self,action,next_pos,reward):
         self.last_reward = reward
-        if self.use_q_matrix == 1:
-            rows = self.q_matrix_size[0]
-            col = self.q_matrix_size[1]
-            estimate = max(self.q_matrix_1[next_pos[2]*col*rows+next_pos[1]*rows+next_pos[0],:])
-            ind = self.current_position[2]*rows*col+self.current_position[1]*rows+self.current_position[0]
-            self.q_matrix_1[ind,action] += self.learn_rate*(reward+self.discount*estimate-self.q_matrix_1[ind,action])
-        elif self.use_q_matrix == 2:
-            rows = self.q_matrix_size[0]
-            estimate = max(self.q_matrix_2[next_pos[1]*rows+next_pos[0],:])
-            ind = self.current_position[1]*rows+self.current_position[0]
-            self.q_matrix_2[ind,action] += self.learn_rate*(reward+self.discount*estimate-self.q_matrix_2[ind,action])
-        elif self.use_q_matrix == 3:
-            estimate = max(self.q_matrix_3[next_pos[2],:])
-            ind = self.current_position[2]
-            self.q_matrix_3[ind,action] += self.learn_rate*(reward+self.discount*estimate-self.q_matrix_2[ind,action])
-        # print self.q_matri_1[ind,action]
-
+        rows = self.q_matrix_size[0]
+        col = self.q_matrix_size[1]
+        estimate = max(self.q_m[next_pos[2]*col*rows+next_pos[1]*rows+next_pos[0],:])
+        ind = self.c_p[2]*rows*col+self.c_p[1]*rows+self.c_p[0]
+        self.q_m[ind,action] += self.learn_rate*(reward+self.discount*estimate-self.q_m[ind,action])
+        
     def get_next_pos(self, action): # 0: go top, 1: go right, 2: go down, 3: go left
         if self.do_step_wise:
             target_pos = [0,0,0]
-            if self.current_position[2] == 0:
+            if self.c_p[2] == 0:
                 y = -1
                 x = +1
                 if action == 0:
-                    target_pos = map(add,self.current_position,[y,0,0])
+                    target_pos = map(add,self.c_p,[y,0,0])
                     target_pos[2] = 0
                 elif action == 1:
-                    target_pos = map(add,self.current_position,[0,x,0])
+                    target_pos = map(add,self.c_p,[0,x,0])
                     target_pos[2] = 1
                 elif action == 2:
-                    target_pos = map(add,self.current_position,[-1*y,0,0])
+                    target_pos = map(add,self.c_p,[-1*y,0,0])
                     target_pos[2] = 2
                 elif action == 3:
-                    target_pos = map(add,self.current_position,[0,-1*x,0])
+                    target_pos = map(add,self.c_p,[0,-1*x,0])
                     target_pos[2] = 3
                 else:
-                    target_pos = self.current_position
-            elif self.current_position[2] == 2:
+                    target_pos = self.c_p
+            elif self.c_p[2] == 2:
                 y = +1
                 x = -1
                 if action == 0:
-                    target_pos = map(add,self.current_position,[y,0,0])
+                    target_pos = map(add,self.c_p,[y,0,0])
                     target_pos[2] = 2
                 elif action == 1:
-                    target_pos = map(add,self.current_position,[0,x,0])
+                    target_pos = map(add,self.c_p,[0,x,0])
                     target_pos[2] = 3
                 elif action == 2:
-                    target_pos = map(add,self.current_position,[-1*y,0,0])
+                    target_pos = map(add,self.c_p,[-1*y,0,0])
                     target_pos[2] = 0
                 elif action == 3:
-                    target_pos = map(add,self.current_position,[0,-1*x,0])
+                    target_pos = map(add,self.c_p,[0,-1*x,0])
                     target_pos[2] = 1
                 else:
-                    target_pos = self.current_position
-            elif self.current_position[2] == 1:
+                    target_pos = self.c_p
+            elif self.c_p[2] == 1:
                 y = +1
                 x = +1
                 if action == 0:
-                    target_pos = map(add,self.current_position,[0,x,0])
+                    target_pos = map(add,self.c_p,[0,x,0])
                     target_pos[2] = 1
                 elif action == 1:
-                    target_pos = map(add,self.current_position,[y,0,0])
+                    target_pos = map(add,self.c_p,[y,0,0])
                     target_pos[2] = 2
                 elif action == 2:
-                    target_pos = map(add,self.current_position,[0,-1*x,0])
+                    target_pos = map(add,self.c_p,[0,-1*x,0])
                     target_pos[2] = 3
                 elif action == 3:
-                    target_pos = map(add,self.current_position,[-1*y,0,0])
+                    target_pos = map(add,self.c_p,[-1*y,0,0])
                     target_pos[2] = 0
                 else:
-                    target_pos = self.current_position
-            elif self.current_position[2] == 3:
+                    target_pos = self.c_p
+            elif self.c_p[2] == 3:
                 y = -1
                 x = -1
                 if action == 0:
-                    target_pos = map(add,self.current_position,[0,x,0])
+                    target_pos = map(add,self.c_p,[0,x,0])
                     target_pos[2] = 3
                 elif action == 1:
-                    target_pos = map(add,self.current_position,[y,0,0])
+                    target_pos = map(add,self.c_p,[y,0,0])
                     target_pos[2] = 0
                 elif action == 2:
-                    target_pos = map(add,self.current_position,[0,-1*x,0])
+                    target_pos = map(add,self.c_p,[0,-1*x,0])
                     target_pos[2] = 1
                 elif action == 3:
-                    target_pos = map(add,self.current_position,[-1*y,0,0])
+                    target_pos = map(add,self.c_p,[-1*y,0,0])
                     target_pos[2] = 2
                 else:
-                    target_pos = self.current_position
+                    target_pos = self.c_p
 
             return target_pos
         else:
@@ -280,39 +256,39 @@ class Robot:
     def run(self):
         while True:
             # time_start = time.time()
-            print self.current_position
+            print self.c_p
             self.speed = 0.1
             self.turn_rate = math.pi
             time.sleep(self.refresh_rate)
-            self.old_position = self.current_position
+            self.old_position = self.c_p
 
-            self.next_position = self.do_action()
+            self.n_p = self.do_action()
 
             print 'sensor_back: ' + str(self.sim_sensor_back)
             print 'sensor_front: ' + str(self.sim_sensor_front)
             print 'sensor_left: ' + str(self.sim_sensor_left)
             print 'sensor_right: ' + str(self.sim_sensor_right)
-            # self.current_position[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
-            # self.current_position[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
-            self.current_position = self.next_position
-            #if self.goal_position[0] == self.current_position[0] and self.goal_position[1] == self.current_position[1]:
+            # self.c_p[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
+            # self.c_p[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
+            self.c_p = self.n_p
+            #if self.goal_position[0] == self.c_p[0] and self.goal_position[1] == self.c_p[1]:
             #    break
         pass
 
     def run_step_wise(self):
         # time_start = time.time()
-        if self.current_position[0] != self.goal_position[0] or self.current_position[1] != self.goal_position[1]:
-            self.old_position = self.current_position
+        if self.c_p[0] != self.goal_position[0] or self.c_p[1] != self.goal_position[1]:
+            self.old_position = self.c_p
             self.history.append([self.old_position[0],self.old_position[1]])
-            self.next_position = self.do_action()
+            self.n_p = self.do_action()
             self.expertness_nrm += self.last_reward
-            self.expertness_nrm += abs(self.last_reward)
-            # self.current_position[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
-            # self.current_position[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
-            self.current_position = self.next_position
+            self.expertness_abs += abs(self.last_reward)
+            # self.c_p[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
+            # self.c_p[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
+            self.c_p = self.n_p
             return False
         else:
-            self.old_position = self.current_position
+            self.old_position = self.c_p
             return True
 
 if __name__ == '__main__':

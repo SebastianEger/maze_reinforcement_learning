@@ -1,8 +1,8 @@
 import Tkinter
-import simulation
-import maze_generator
+
 import robot_controller
-import thread
+import simulation
+from sample.simulation.mazes import maze_generator
 
 top = Tkinter.Tk()
 

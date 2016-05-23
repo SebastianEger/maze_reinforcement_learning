@@ -7,8 +7,8 @@ import numpy as np
 import itertools
 
 #settings
-num_rows = 20
-num_cols = 20
+num_rows = 5
+num_cols = 5
 num_agents = 10
 iterations = 1
 do_plot = True
