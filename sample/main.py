@@ -1,57 +1,45 @@
-import maze
-import agent_controller
-import maze_depth_first
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import numpy as np
-import itertools
+import mazes.maze as maze_gen
+import mazes.maze_depth_first as maze_dfs
+import mazes.maze_generator as maze_static
+import robot_controller
+import simulation
 
-#settings
-num_rows = 5
-num_cols = 5
-num_agents = 10
-iterations = 1
-do_plot = True
+plt.figure(figsize=(10, 10))
 
-path_len_counter = 0
-path = []
-ac = 0
+#maze = maze_bin.maze_dfs(10,10,True)
+maze = maze_gen.maze(20,20,density=0.2)
+#maze = maze_generator.get_static_maze_2()
+plt.imshow(maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
+plt.show()
+rc1 = robot_controller.RobotController(5,maze,1)
+rc1.set_exploration_rate(0)
+
+sim1 = simulation.Simulation(rc1,maze)
+sim1.do_plot = False
+sim1.refresh_rate = 0.0
+
+rc2 = robot_controller.RobotController(5,maze,2)
+rc2.set_exploration_rate(0)
+
+sim2 = simulation.Simulation(rc2,maze)
+sim2.do_plot = False
+sim2.refresh_rate = 0.0
+
+data1 = []
+data2 = []
+iterations = 500
 
 for i in xrange(iterations):
-    M = maze_depth_first.generate_maze(num_rows,num_cols)
-    ac = agent_controller.AgentController(M,num_agents)
-    ac.run_agents()
-print(float(path_len_counter)/iterations)
+    rc1.reset_robots()
+    data1.append(sim1.run_simulation())
+    print float(i)/float(iterations)
+i = 0
+for i in xrange(iterations):
+    rc2.reset_robots()
+    data2.append(sim2.run_simulation())
+    print float(i)/float(iterations)
 
-
-if do_plot:
-
-    image = np.zeros((num_rows*10,num_cols*10), dtype=np.uint8)
-    # Generate the image for display
-
-    for row in range(0,num_rows):
-        for col in range(0,num_cols):
-            cell_data = M[row,col]
-            for i in range(10*row+1,10*row+9):
-                image[i,range(10*col+1,10*col+9)] = 255
-                if cell_data[0] == 1:image[range(10*row+1,10*row+9),10*col] = 255
-                if cell_data[1] == 1:image[10*row,range(10*col+1,10*col+9)] = 255
-                if cell_data[2] == 1:image[range(10*row+1,10*row+9),10*col+9] = 255
-                if cell_data[3] == 1:image[10*row+9,range(10*col+1,10*col+9)] = 255
-
-    # Display the image
-    plt.imshow(image, cmap = cm.Greys_r, interpolation='nearest')
-
-    print 'Anzahl an Pfaden:' + str(len(ac.paths_list))
-    #print ac.agents_list[0].maze[:,:,5]
-    colors = itertools.cycle(["r", "b", "g"])
-    for path_it in ac.paths_list:
-        y,x = zip(*path_it)
-        x = [i * 10 + 5 for i in x]
-        y = [i * 10 + 5 for i in y]
-        plt.scatter(x,y, color=next(colors))
-    plt.show()
-else:
-    #plt.imshow(ac.maze_shared[:,:,5], cmap = plt.cm.binary, interpolation='nearest')
-    #plt.show()
-    pass
+plt.plot(data1, color='b')
+plt.plot(data2, color='r')
+plt.show()
