@@ -1,55 +1,62 @@
-import matplotlib.pyplot as plt
 import numpy
+from sample.robots import Artemis, Holly, Koboi, Butler
 
-import robot
-import robot_2
-import simulation
 
 
 class RobotController:
 
-    def __init__(self, number, maze, r_type):
-        self.number_robots = number
+    def __init__(self, maze):
         self.maze = maze
+        self.q_matrix_size = numpy.shape(maze)
+
         self.maze_shape = numpy.shape(maze)
-        self.run_mode = 0   # 0 = stepwise
-        self.robot_list = []
+        """ all """
         self.traveled_map = numpy.zeros(self.maze_shape,dtype=numpy.uint8)
-        if r_type == 1:
-            for _ in xrange(number):
-                new_robot = robot.Robot(_)
-                new_robot.c_p = [1,1,2]
-                new_robot.goal_position = [self.maze_shape[0]-2,self.maze_shape[1]-2]
-                new_robot.init_q_matrix(maze)
-                new_robot.traveled_map = self.traveled_map
-                maze[new_robot.c_p[0],new_robot.c_p[1],0] = 1
-                self.robot_list.append(new_robot)
-        else:
-            for _ in xrange(number):
-                new_robot = robot_2.Robot(_)
-                new_robot.c_p = [1,1,2]
-                new_robot.goal_position = [self.maze_shape[0]-2,self.maze_shape[1]-2]
-                new_robot.init_q_matrix(maze)
-                new_robot.traveled_map = self.traveled_map
-                maze[new_robot.c_p[0],new_robot.c_p[1],0] = 1
-                self.robot_list.append(new_robot)
-        for _ in self.robot_list:
-            _.robot_list = self.robot_list
+        self.robot_list = []
 
-    def add_robot(self):
-        new_robot = robot.Robot(self.number_robots+1)
-        self.number_robots += 1
-        self.robot_list.append(new_robot)
+        """ Butler """
+        self.shared_q_m = numpy.zeros((self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
 
-    def reset_robots(self):
+    def init_robots(self,robot,start_positions,goal_positions):
+        number = len(start_positions)
+        if robot == 'Artemis':
+            for _ in xrange(number):
+                new_robot = Artemis.Artemis(_,self.maze,robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                new_robot.traveled_map = self.traveled_map
+                self.robot_list.append(new_robot)
+        if robot == 'Butler':
+            for _ in xrange(number):
+                new_robot = Butler.Butler(_,self.maze,robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                new_robot.set_q_shared(self.shared_q_m)
+                new_robot.traveled_map = self.traveled_map
+                self.robot_list.append(new_robot)
+        if robot == 'Holly':
+            for _ in xrange(number):
+                new_robot = Holly.Holly(_,self.maze,robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                new_robot.traveled_map = self.traveled_map
+                self.robot_list.append(new_robot)
+        if robot == 'Koboi':
+            for _ in xrange(number):
+                new_robot = Koboi.Koboi(_, self.maze, robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                new_robot.traveled_map = self.traveled_map
+                self.robot_list.append(new_robot)
+        for robot in self.robot_list:
+            robot.robot_list = self.robot_list
+
+    def reset_robots(self,start_positions,goal_positions):
         i = 0
         self.traveled_map = numpy.zeros(numpy.shape(self.traveled_map),dtype=numpy.uint8)
-        for _ in self.robot_list:
-            _.traveled_map = self.traveled_map
-            self.maze[_.c_p[0],_.c_p[1],0] = 0
-            _.c_p = [1,1,2]
-            _.goal_position = [self.maze_shape[0]-2,self.maze_shape[1]-2]
-            self.maze[_.c_p[0],_.c_p[1],0] = 1
+        for robot in self.robot_list:
+            robot.traveled_map = self.traveled_map
+            robot.reset(start_positions[i],goal_positions[i])
             i += 1
 
     def set_exploration_mode(self,mode):
@@ -60,6 +67,15 @@ class RobotController:
         for _ in self.robot_list:
             _.exploration_rate = rate
 
-    def set_q_matrix(self, m):
-        for _ in self.robot_list:
-            _.use_q_matrix = m
+    def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, cooperation_time = 0):
+        for robot in self.robot_list:
+            robot.learn_rate = learn_rate
+            robot.discount = discount
+            robot.reward_wall = reward_wall
+            robot.reward_step = reward_step
+            robot.reward_robot = reward_robot
+            robot.reward_goal = reward_goal
+            if robot.name == "Koboi":
+                robot.cooperation_time = cooperation_time
+            if robot.name == "Holly":
+                robot.cooperation_time = cooperation_time

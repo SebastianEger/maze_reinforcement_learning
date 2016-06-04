@@ -25,6 +25,30 @@ def get_static_maze_2():
     maze[12:13,7:9,0] = 1
     return maze
 
+def get_static_maze_3():
+    maze = np.zeros((15,15,5),dtype=np.uint8)
+    maze[0,:,0] = 1
+    maze[14,:,0] = 1
+    maze[:,0,0] = 1
+    maze[:,14,0] = 1
+
+    maze[3,3:7,0] = 1
+    maze[3,8:12,0] = 1
+    maze[11,3:7,0] = 1
+    maze[11,8:12,0] = 1
+
+    maze[3:6,3,0] = 1
+    maze[9:12,3,0] = 1
+    maze[3:6,11,0] = 1
+    maze[9:12,11,0] = 1
+
+    maze[6:9,5,0] = 1
+    maze[6:9,9,0] = 1
+
+    maze[5,7,0] = 1
+    maze[9,7,0] = 1
+    return maze
+
 if __name__ == '__main__':
     maze_1 = get_static_maze_1()
     plt.figure(figsize=(10, 10))

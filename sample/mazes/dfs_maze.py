@@ -4,7 +4,7 @@ from itertools import chain
 import matplotlib.pyplot as plt
 
 
-def generate_maze(num_rows = 10, num_cols=10, convert = False):
+def generate_maze(num_rows = 10, num_cols=10, convert = True):
     M = np.zeros((num_rows,num_cols,6), dtype=np.uint8)
     # The array M is going to hold the array information for each cell.
     # The first four coordinates tell if walls exist on those sides
@@ -90,6 +90,7 @@ def generate_maze(num_rows = 10, num_cols=10, convert = False):
     else:
         return M
 
+
 def convertToBin(M):
     maze_size = np.shape(M)
     Mbin = np.zeros((maze_size[0]*2+1,maze_size[1]*2+1,3), dtype=np.uint8)
@@ -116,11 +117,15 @@ def convertToBin(M):
     return Mbin
 
 
-if __name__ == '__main__':
+def generate_maze_special(num_rows = 10, num_cols=10):
+    maze = generate_maze(num_rows, num_cols)
+    i = 0
+    while i < 4*num_rows*num_rows/10:
+        y = np.random.random_integers(1,2*num_rows-1)
+        x = np.random.random_integers(1,2*num_cols-1)
+        if maze[y][x][0] == 1:
+            maze[y][x][0] = 0
+            i += 1
+    return maze
 
-    M = generate_maze(20,20,True)
-
-    plt.figure(figsize=(10, 5))
-    plt.imshow(M[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
-    plt.show()
 

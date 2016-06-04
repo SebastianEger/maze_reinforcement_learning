@@ -19,15 +19,16 @@ class Robot:
         self.history = []
         self.robot_list = []    # contains the other created robots
         self.traveled_map = 0
+        self.do_learning = False
 
         """ Q learning settings """
         self.q_matrix_size = []
         self.q_m = numpy.zeros((5,5),dtype=numpy.float)  # orientation x row x col
         self.learn_rate = 0.2
         self.discount = 0.9
-        self.reward_wall = -1
+        self.reward_wall = -10
         self.reward_step = -0.01
-        self.reward_goal = 10
+        self.reward_goal = 100
         self.reward_robot = -0.01
         self.last_reward = 0
 
@@ -48,7 +49,7 @@ class Robot:
 
     def init_q_matrix(self,maze):
         self.q_matrix_size = numpy.shape(maze)
-        self.q_m = numpy.zeros((self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
+        self.q_m = numpy.zeros((4*16,4),dtype=numpy.float)
 
     def get_reward_and_n_p(self,action):
         next_pos = self.get_next_pos(action)
@@ -68,24 +69,59 @@ class Robot:
         return next_pos
 
     def do_action(self):   # function for getting the next action
-        rows = self.q_matrix_size[0]
-        actions = []
-
-        ind = self.c_p[1]*rows+self.c_p[0]
-        actions = list(self.q_m[ind,:])
-        indices = [i[0] for i in sorted(enumerate(actions), key=lambda x:x[1],reverse=True)]
-        for _ in indices:
-            if self.check_action(_):
-                return self.get_reward_and_n_p(_)
-            else:
-                self.get_reward_and_n_p(_)
-        return self.c_p  # if no cell is free
+        if self.do_learning:
+            actions = []
+            ind = 0
+            if self.sim_sensor_front:
+                ind += 1
+            if self.sim_sensor_right:
+                ind += 2
+            if self.sim_sensor_back:
+                ind += 4
+            if self.sim_sensor_left:
+                ind += 8
+            ind = ind+self.c_p[2]*16
+            actions = list(self.q_m[ind,:])
+            indices = [i[0] for i in sorted(enumerate(actions), key=lambda x:x[1],reverse=True)]
+            for _ in indices:
+                if self.check_action(_):
+                    return self.get_reward_and_n_p(_)
+                else:
+                    self.get_reward_and_n_p(_)
+            return self.c_p  # if no cell is free
+        else:
+            action_list = []
+            for _ in range(4):
+                action_list.append(_)
+            numpy.random.shuffle(action_list)
+            action_list.append(4)
+            for action in action_list:
+                next_pos = self.get_next_pos(action)
+                if self.check_action(action):
+                    if action == 4:
+                        pass
+                    if next_pos[0] == self.goal_position[0] and next_pos[1] == self.goal_position[1]:
+                        self.update_q_matrix(action,next_pos,self.reward_goal)
+                    else:
+                        self.update_q_matrix(action,next_pos,self.reward_step)
+                    return next_pos
+                else:
+                    next_pos = self.get_next_pos(action)
+                    self.update_q_matrix(action,next_pos,self.reward_wall)
 
     def update_q_matrix(self,action,next_pos,reward):
         self.last_reward = reward
-        rows = self.q_matrix_size[0]
-        estimate = max(self.q_m[next_pos[1]*rows+next_pos[0],:])
-        ind = self.c_p[1]*rows+self.c_p[0]
+        ind = 0
+        if self.sim_sensor_front:
+            ind += 1
+        if self.sim_sensor_right:
+            ind += 2
+        if self.sim_sensor_back:
+            ind += 4
+        if self.sim_sensor_left:
+            ind += 8
+        estimate = 0
+        ind = ind+self.c_p[2]*16
         self.q_m[ind,action] += self.learn_rate*(reward+self.discount*estimate-self.q_m[ind,action])
 
     def check_action(self, a):
@@ -162,38 +198,15 @@ class Robot:
             target_pos = self.c_p
         return target_pos
 
-    def run(self):
-        while True:
-            # time_start = time.time()
-            print self.c_p
-            self.speed = 0.1
-            self.turn_rate = math.pi
-            time.sleep(self.refresh_rate)
-            self.old_position = self.c_p
-
-            self.n_p = self.do_action()
-
-            print 'sensor_back: ' + str(self.sim_sensor_back)
-            print 'sensor_front: ' + str(self.sim_sensor_front)
-            print 'sensor_left: ' + str(self.sim_sensor_left)
-            print 'sensor_right: ' + str(self.sim_sensor_right)
-            # self.c_p[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
-            # self.c_p[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
-            self.c_p = self.n_p
-            #if self.goal_position[0] == self.c_p[0] and self.goal_position[1] == self.c_p[1]:
-            #    break
-        pass
-
     def run_step_wise(self):
         # time_start = time.time()
         if self.c_p[0] != self.goal_position[0] or self.c_p[1] != self.goal_position[1]:
             self.old_position = self.c_p
             self.history.append([self.old_position[0],self.old_position[1]])
             self.n_p = self.do_action()
+            #print self.q_m[self.old_position[1]*self.q_matrix_size[0]+self.old_position[0],:]
             self.expertness_nrm += self.last_reward
             self.expertness_abs += abs(self.last_reward)
-            # self.c_p[0] += self.speed*self.refresh_rate*math.cos(self.turn_rate)
-            # self.c_p[1] += self.speed*self.refresh_rate*math.sin(self.turn_rate)
             self.c_p = self.n_p
             return False
         else:

@@ -1,5 +1,13 @@
-actions = [-1,0,-0.5,-0.3]
+import numpy as np
+from collections import Counter
 
-indices = [i[0] for i in sorted(enumerate(actions), key=lambda x:x[1],reverse=True)]
+a = [0,0,0,-2]
+b = [0,1,2,3]
+copy = b[0:3]
 
-print indices
+np.random.shuffle(copy)
+
+b[0:3] = copy
+print b
+print a.count(0)
+

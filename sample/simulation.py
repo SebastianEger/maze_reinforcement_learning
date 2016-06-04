@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class Simulation:
     def __init__(self,rc,maze):
         self.robot_controller = rc
-        self.do_plot = True
+        self.do_plot = False
         self.refresh_rate = 0
         self.max_iterations = 10000
         self.maze = maze
@@ -15,6 +15,8 @@ class Simulation:
 
     def load_maze(self,maze):
         self.maze = maze
+        self.robot_controller.maze = self.maze
+        self.robot_controller.reset_robots()
         pass
 
     def sim_sensor(self, r):  # r = robot
@@ -81,24 +83,24 @@ class Simulation:
             all_finished = True
             for robot_it in self.robot_controller.robot_list:
                 self.sim_sensor(robot_it)   # simulate robot sensor
-                if robot_it.run_step_wise():
+                if robot_it.make_step():
                     self.maze[robot_it.c_p[0],robot_it.c_p[1],0] = 0
                     pass
                 else:
                     self.robot_controller.traveled_map[robot_it.c_p[0],robot_it.c_p[1],0] += 1
                     all_finished = False
-                    self.maze[robot_it.old_position[0],robot_it.old_position[1],0] = 0
-                    self.maze[robot_it.c_p[0],robot_it.c_p[1],0] = 2
+                    self.maze[robot_it.o_p[0],robot_it.o_p[1],0] = 0
+                    self.maze[robot_it.c_p[0],robot_it.c_p[1],0] = robot_it.id+2
             if self.do_plot:
                 plt.clf()
                 plt.imshow(self.maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
                 plt.show()
-                plt.pause(0.0001)
+                plt.pause(0.00001)
             counter += 1
             step_counter += 1
             if all_finished:
                 return step_counter
-            time.sleep(self.refresh_rate)
+            # time.sleep(self.refresh_rate)
         #print self.list_robots[0].q_matrix_1
         return True
 
