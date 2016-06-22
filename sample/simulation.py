@@ -11,20 +11,18 @@ class Simulation:
         self.refresh_rate = 0
         self.max_iterations = 10000
         self.maze = maze
-        pass
 
     def load_maze(self,maze):
         self.maze = maze
         self.robot_controller.maze = self.maze
         self.robot_controller.reset_robots()
-        pass
 
-    def sim_sensor(self, r):  # r = robot
+    def sim_sensor(self, r):  # simluates sensor of robot r
         r_pos_top = map(add,r.c_p,[-1,0,0])
         r_pos_down = map(add,r.c_p,[1,0,0])
         r_pos_left = map(add,r.c_p,[0,-1,0])
         r_pos_right = map(add,r.c_p,[0,1,0])
-        o = r.c_p[2]
+        o = r.c_p[2] # orientation
         r.sim_sensor_front = 0
         r.sim_sensor_back = 0
         r.sim_sensor_left = 0
@@ -66,11 +64,8 @@ class Simulation:
                 r.sim_sensor_right = 1
             if o == 3:
                 r.sim_sensor_front = 1
-        else:
-            return False
 
     def run_simulation(self):
-        counter = 0
         if self.do_plot:
             plt.ion()
             plt.figure(figsize=(10, 5))
@@ -84,25 +79,24 @@ class Simulation:
             for robot_it in self.robot_controller.robot_list:
                 self.sim_sensor(robot_it)   # simulate robot sensor
                 if robot_it.make_step():
+                    # free current position
                     self.maze[robot_it.c_p[0],robot_it.c_p[1],0] = 0
-                    pass
                 else:
+                    # traveled map
                     self.robot_controller.traveled_map[robot_it.c_p[0],robot_it.c_p[1],0] += 1
-                    all_finished = False
+                    # free old position
                     self.maze[robot_it.o_p[0],robot_it.o_p[1],0] = 0
+                    # block current position
                     self.maze[robot_it.c_p[0],robot_it.c_p[1],0] = robot_it.id+2
+                    all_finished = False
             if self.do_plot:
                 plt.clf()
                 plt.imshow(self.maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
                 plt.show()
                 plt.pause(0.00001)
-            counter += 1
             step_counter += 1
             if all_finished:
                 return step_counter
-            # time.sleep(self.refresh_rate)
-        #print self.list_robots[0].q_matrix_1
-        return True
 
     def do_animation(self):
         pass

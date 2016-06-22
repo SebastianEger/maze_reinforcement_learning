@@ -1,10 +1,10 @@
 import time
 import math
 import numpy
-from step_robot import StepRobot
+from basicRobot import BasicRobot
 from operator import add
 
 
-class Artemis(StepRobot):
+class Artemis(BasicRobot):
     def __init__(self,id,maze,name):
-        StepRobot.__init__(self,id,maze,name)
+        BasicRobot.__init__(self,id,maze,name)

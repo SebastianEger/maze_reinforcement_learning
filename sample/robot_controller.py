@@ -1,6 +1,5 @@
 import numpy
-from sample.robots import Artemis, Holly, Koboi, Butler
-
+from robots import Artemis, Holly, Koboi, Butler, Diggums, Foaly
 
 
 class RobotController:
@@ -15,7 +14,10 @@ class RobotController:
         self.robot_list = []
 
         """ Butler """
-        self.shared_q_m = numpy.zeros((self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
+        self.butler_sq = numpy.zeros((self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
+
+        """ Diggums """
+        self.diggums_sq = numpy.zeros((4*self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
 
     def init_robots(self,robot,start_positions,goal_positions):
         number = len(start_positions)
@@ -24,29 +26,46 @@ class RobotController:
                 new_robot = Artemis.Artemis(_,self.maze,robot)
                 new_robot.c_p = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
-                new_robot.traveled_map = self.traveled_map
+                # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Butler':
             for _ in xrange(number):
                 new_robot = Butler.Butler(_,self.maze,robot)
                 new_robot.c_p = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
-                new_robot.set_q_shared(self.shared_q_m)
-                new_robot.traveled_map = self.traveled_map
+                new_robot.set_q_shared(self.butler_sq)
+                # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Holly':
             for _ in xrange(number):
                 new_robot = Holly.Holly(_,self.maze,robot)
                 new_robot.c_p = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
-                new_robot.traveled_map = self.traveled_map
+                # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Koboi':
             for _ in xrange(number):
                 new_robot = Koboi.Koboi(_, self.maze, robot)
                 new_robot.c_p = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
-                new_robot.traveled_map = self.traveled_map
+                # new_robot.traveled_map = self.traveled_map
+                self.robot_list.append(new_robot)
+        if robot == 'Diggums':
+            for _ in xrange(number):
+                new_robot = Diggums.Diggums(_, self.maze, robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                # new_robot.traveled_map = self.traveled_map
+                new_robot.set_q_shared(self.diggums_sq)
+                self.robot_list.append(new_robot)
+        if robot == 'Foaly':
+            for _ in xrange(number):
+                new_robot = Foaly.Foaly(_, self.maze, robot)
+                new_robot.c_p = start_positions[_]
+                new_robot.goal_position = goal_positions[_]
+                # new_robot.traveled_map = self.traveled_map
+                new_robot.set_q_shared(self.diggums_sq)
+                new_robot.set_dist_start_goal()
                 self.robot_list.append(new_robot)
         for robot in self.robot_list:
             robot.robot_list = self.robot_list
@@ -67,9 +86,10 @@ class RobotController:
         for _ in self.robot_list:
             _.exploration_rate = rate
 
-    def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, cooperation_time = 0):
+    def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, exploration_rate=0, cooperation_time = 0):
         for robot in self.robot_list:
             robot.learn_rate = learn_rate
+            robot.exploration_rate = exploration_rate
             robot.discount = discount
             robot.reward_wall = reward_wall
             robot.reward_step = reward_step

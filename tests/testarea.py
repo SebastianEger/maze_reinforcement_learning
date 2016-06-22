@@ -1,13 +1,44 @@
-import numpy as np
-from collections import Counter
+from scipy import *
+import sys, time
 
-a = [0,0,0,-2]
-b = [0,1,2,3]
-copy = b[0:3]
+from pybrain.rl.environments.mazes import Maze, MDPMazeTask
+from pybrain.rl.learners.valuebased import ActionValueTable
+from pybrain.rl.agents import LearningAgent
+from pybrain.rl.learners import Q, SARSA
+from pybrain.rl.experiments import Experiment
+from pybrain.rl.environments import Task
 
-np.random.shuffle(copy)
+import pylab
+pylab.gray()
+pylab.ion()
 
-b[0:3] = copy
-print b
-print a.count(0)
+structure = array([[1, 1, 1, 1, 1, 1, 1, 1, 1],
+                   [1, 0, 0, 1, 0, 0, 0, 0, 1],
+                   [1, 0, 0, 1, 0, 0, 1, 0, 1],
+                   [1, 0, 0, 1, 0, 0, 1, 0, 1],
+                   [1, 0, 0, 1, 0, 1, 1, 0, 1],
+                   [1, 0, 0, 0, 0, 0, 1, 0, 1],
+                   [1, 1, 1, 1, 1, 1, 1, 0, 1],
+                   [1, 0, 0, 0, 0, 0, 0, 0, 1],
+                   [1, 1, 1, 1, 1, 1, 1, 1, 1]])
 
+environment = Maze(structure, (7, 7))
+
+controller = ActionValueTable(81, 4)
+controller.initialize(1.)
+
+learner = Q()
+agent = LearningAgent(controller, learner)
+
+task = MDPMazeTask(environment)
+
+experiment = Experiment(task, agent)
+
+counter = 0
+while counter < 100:
+    experiment.doInteractions(100)
+    agent.learn()
+    agent.reset()
+
+    pylab.pcolor(controller.params.reshape(81,4).max(1).reshape(9,9))
+    pylab.draw()
