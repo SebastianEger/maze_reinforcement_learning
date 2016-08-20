@@ -1,44 +1,15 @@
-from scipy import *
-import sys, time
+import numpy as np
+import matplotlib.pyplot as plt
 
-from pybrain.rl.environments.mazes import Maze, MDPMazeTask
-from pybrain.rl.learners.valuebased import ActionValueTable
-from pybrain.rl.agents import LearningAgent
-from pybrain.rl.learners import Q, SARSA
-from pybrain.rl.experiments import Experiment
-from pybrain.rl.environments import Task
+maze = np.zeros((4,8,5),dtype=np.uint8)
+maze[0,:,0] = 1
+maze[3,:,0] = 1
+maze[:,0,0] = 1
+maze[:,7,0] = 1
+maze[1,2,0] = 1
+maze[1,4,0] = 1
+maze[1,5,0] = 1
 
-import pylab
-pylab.gray()
-pylab.ion()
-
-structure = array([[1, 1, 1, 1, 1, 1, 1, 1, 1],
-                   [1, 0, 0, 1, 0, 0, 0, 0, 1],
-                   [1, 0, 0, 1, 0, 0, 1, 0, 1],
-                   [1, 0, 0, 1, 0, 0, 1, 0, 1],
-                   [1, 0, 0, 1, 0, 1, 1, 0, 1],
-                   [1, 0, 0, 0, 0, 0, 1, 0, 1],
-                   [1, 1, 1, 1, 1, 1, 1, 0, 1],
-                   [1, 0, 0, 0, 0, 0, 0, 0, 1],
-                   [1, 1, 1, 1, 1, 1, 1, 1, 1]])
-
-environment = Maze(structure, (7, 7))
-
-controller = ActionValueTable(81, 4)
-controller.initialize(1.)
-
-learner = Q()
-agent = LearningAgent(controller, learner)
-
-task = MDPMazeTask(environment)
-
-experiment = Experiment(task, agent)
-
-counter = 0
-while counter < 100:
-    experiment.doInteractions(100)
-    agent.learn()
-    agent.reset()
-
-    pylab.pcolor(controller.params.reshape(81,4).max(1).reshape(9,9))
-    pylab.draw()
+plt.figure(figsize=(10, 10))
+plt.imshow(maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
+plt.show()

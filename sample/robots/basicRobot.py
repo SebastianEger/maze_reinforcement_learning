@@ -1,8 +1,7 @@
 import numpy
-from basicSensors import BasicSensors
+from basicMovementAndSensors import BasicMovementAndSensors
 from basicExploration import BasicExploration
 from basicQlearning import BasicQlearning
-from operator import add
 
 
 """ Simple Q-learning agent
@@ -11,98 +10,76 @@ from operator import add
 """
 
 
-class BasicRobot(BasicSensors, BasicExploration, BasicQlearning):
-    def __init__(self, id, maze, name = 'StepRobot'):
-        BasicSensors.__init__(self)
+class BasicRobot(BasicMovementAndSensors, BasicExploration, BasicQlearning):
+    def __init__(self, id, maze, name='StepRobot'):
+        BasicMovementAndSensors.__init__(self, maze)
         BasicExploration.__init__(self)
-        BasicQlearning.__init__(self, maze)
+        BasicQlearning.__init__(self, maze, self.nActions, self.nStates)
+
+        ''' Some information about the robot'''
         self.id = id
         self.name = name
 
-        """ robot specs """
-        self.c_p = [1,1,2]  # current_position, y-axis, x-axis, orientation [cm]
-        self.o_p = []  # old position
-        self.n_p = self.c_p  # next position
-        self.goal_position = [10,10,2]
-        self.history = []
-        self.robot_list = []    # list ofother created robots
-        self.traveled_map = numpy.zeros(numpy.shape(maze))
+        self.exploration_rate = 0
 
+        """ Robot coordinates """
+        self.current_position = [1,1,2]  # current_position, y-axis, x-axis, orientation [cm]
+        self.goal_position = [10,10,2] # default goal position
+        self.history = []
+        self.robot_list = []    # list of all robots
+        self.traveled_map = numpy.zeros(numpy.shape(maze)) # map to store already visited locations
 
     """ main function for robot, makes one step each call """
-    def make_step(self):
-        self.o_p = self.c_p  # set old_position
-        if self.reached_goal():  # check if we reached the goal
-            self.o_p = self.c_p
-            return True
+    def makeStep(self):
+        if self.goalIsReached():  # check if we reached the goal
+            return True, self.current_position # return True because current position is goal position
 
-        self.history.append([self.o_p[0],self.o_p[1]])  # add position to history
+        self.addPosToHistory()
 
-        actions = self.get_action_list()
-        if numpy.random.random_sample(1) < self.exploration_rate:
-            actions = self.explore
+        actions = self.getActionList(self.getState(self.current_position)) # get action list from Q matrix
+        actions = self.explore(self.nActions, actions)
 
         # check actions and get next position and reward
         for action in actions:
-            self.n_p = self.get_next_pos(action)
-            if self.check_action(self.c_p, action):  # check action if no obstacle is in the way
-                if self.n_p[0] == self.goal_position[0] and self.n_p[1] == self.goal_position[1]:
-                    self.update_q(action, self.c_p, self.n_p, self.reward_goal)
-                else:
-                    self.update_q(action, self.c_p, self.n_p, self.reward_step)
-                break
+            next_position = self.getNextPos(action, self.current_position) # get target position
+            if self.checkAction(self.current_position, action):  # check action if no obstacle is in the way
+                self.move(action, next_position)  # move to new location and get reward
+                break  # do not check any further actions in actionslist
             else:
-                is_robot = False
-                for robot in self.robot_list:  # check if robot
-                    if self.n_p[0] == robot.c_p[0] and self.n_p[1] == robot.c_p[1]:
-                        is_robot = True
-                        break
-                if is_robot:
-                    self.update_q(action, self.c_p, self.n_p, self.reward_robot)
-                else:
-                    self.update_q(action, self.c_p,self.n_p, self.reward_wall)
-                self.expertness = self.compute_expertness()
-                self.n_p = self.c_p # reset next position to current position
+                self.stay(action, next_position)  # stay and get reward
 
-        self.expertness = self.compute_expertness()
-        self.c_p = self.n_p
-        return False
+        return False, self.current_position
 
-    def get_action_list(self):  # returns list of q_actions, sorted by q matrix values
-        index = self.c_p[1]*self.rows+self.c_p[0]
-        actions_unsorted = list(self.q_m[index,:])
-        actions_sorted = [i[0] for i in sorted(enumerate(actions_unsorted), key=lambda x:x[1],reverse=True)]
-
-        number_same_value = actions_unsorted.count(actions_sorted[0]) # choose a random action if they have same q values
-        copy = actions_sorted[0:number_same_value]
-        numpy.random.shuffle(copy)
-        actions_sorted[0:number_same_value] = copy
-        return actions_sorted
-
-    def get_next_pos(self, q_action): # get next position for q action
-        if q_action == 0:
-            target_pos = map(add,self.c_p,[-1,0,0])
-            target_pos[2] = 0
-        elif q_action == 1:
-            target_pos = map(add,self.c_p,[0,+1,0])
-            target_pos[2] = 1
-        elif q_action == 2:
-            target_pos = map(add,self.c_p,[+1,0,0])
-            target_pos[2] = 2
-        elif q_action == 3:
-            target_pos = map(add,self.c_p,[0,-1,0])
-            target_pos[2] = 3
+    def move(self, action, next_position):
+        if next_position[0] == self.goal_position[0] and next_position[1] == self.goal_position[1]:  # check if target is goal
+            self.updateQ(action, self.getState(self.current_position), self.getState(next_position), self.reward_goal)  # update q with reward goal
         else:
-            target_pos = self.c_p
-        return target_pos
+            self.updateQ(action, self.getState(self.current_position), self.getState(next_position), self.reward_step)  # update q with reward step
+        self.expertness = self.computeExpertness()
+        self.current_position = next_position
 
-    def reached_goal(self): # function to determine if goal is reached
-        if self.c_p[0] == self.goal_position[0] and self.c_p[1] == self.goal_position[1]:
+    def stay(self, action, next_position):
+        is_robot = False
+        for robot in self.robot_list:  # check if robot
+            if next_position[0] == robot.current_position[0] and next_position[1] == robot.current_position[1]:
+                is_robot = True
+                break
+
+        if is_robot:
+            self.updateQ(action, self.getState(self.current_position), self.getState(next_position), self.reward_robot) # update q with reward robot
+        else:
+            self.updateQ(action, self.getState(self.current_position), self.getState(next_position), self.reward_wall) # update q with reward wall
+        self.expertness = self.computeExpertness() # calcualte expertness
+
+    def goalIsReached(self): # function to determine if goal is reached
+        if self.current_position[0] == self.goal_position[0] and self.current_position[1] == self.goal_position[1]:
             return True
         return False
 
-    def reset(self, start, goal):
-        self.c_p = start
-        self.n_p = start
-        self.o_p = start
+    def addPosToHistory(self):
+        self.traveled_map[self.current_position[0],self.current_position[1], 0] = 1
+        self.history.append([self.current_position[0],self.current_position[1]])  # add old position to history
+
+    def reset(self, start, goal): # reset robot start and goal coordinates
+        self.current_position = start
         self.goal_position = goal

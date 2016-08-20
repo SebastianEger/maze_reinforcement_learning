@@ -1,12 +1,12 @@
 from sample.robots import holly
 from sample.mazes import random_maze
 import sample.simulation
-import sample.robot_controller
+import sample.robotController
 
 
 
 maze = random_maze.maze(10,10)
-rc = sample.robot_controller.RobotController(1,maze,"Holly")
+rc = sample.robotController.RobotController(1, maze, "Holly")
 sim = sample.simulation.Simulation(rc,maze)
 sim.do_plot = False
 

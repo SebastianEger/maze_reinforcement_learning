@@ -19,19 +19,19 @@ class RobotController:
         """ Diggums """
         self.diggums_sq = numpy.zeros((4*self.q_matrix_size[0]*self.q_matrix_size[1],4),dtype=numpy.float)
 
-    def init_robots(self,robot,start_positions,goal_positions):
+    def init_robots(self, robot, start_positions, goal_positions):
         number = len(start_positions)
         if robot == 'Artemis':
             for _ in xrange(number):
                 new_robot = Artemis.Artemis(_,self.maze,robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Butler':
             for _ in xrange(number):
                 new_robot = Butler.Butler(_,self.maze,robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 new_robot.set_q_shared(self.butler_sq)
                 # new_robot.traveled_map = self.traveled_map
@@ -39,21 +39,21 @@ class RobotController:
         if robot == 'Holly':
             for _ in xrange(number):
                 new_robot = Holly.Holly(_,self.maze,robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Koboi':
             for _ in xrange(number):
                 new_robot = Koboi.Koboi(_, self.maze, robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 # new_robot.traveled_map = self.traveled_map
                 self.robot_list.append(new_robot)
         if robot == 'Diggums':
             for _ in xrange(number):
                 new_robot = Diggums.Diggums(_, self.maze, robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 # new_robot.traveled_map = self.traveled_map
                 new_robot.set_q_shared(self.diggums_sq)
@@ -61,7 +61,7 @@ class RobotController:
         if robot == 'Foaly':
             for _ in xrange(number):
                 new_robot = Foaly.Foaly(_, self.maze, robot)
-                new_robot.c_p = start_positions[_]
+                new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 # new_robot.traveled_map = self.traveled_map
                 new_robot.set_q_shared(self.diggums_sq)

@@ -1,13 +1,12 @@
-import time
 import math
-import numpy
 from basicRobot import BasicRobot
-from operator import add
 
 
+# Expertness: Inverse Distance to Goal (IDG)
+# Weight Calculation: Learning From All
 class Foaly(BasicRobot):
-    def __init__(self,id,maze,name):
-        BasicRobot.__init__(self,id,maze,name)
+    def __init__(self, id, maze, name):
+        BasicRobot.__init__(self, id, maze, name)
         self.dist_start_goal = 0
 
     def set_q_shared(self,q):
@@ -21,13 +20,10 @@ class Foaly(BasicRobot):
         if expertness_sum == 0:
             return 1
 
-        return 2
-        #print self.id, float(self.dist_start_goal)/float(self.dist_to_goal())
-        #return float(self.dist_start_goal)/float(self.dist_to_goal())
-        # return float(self.expertness)/float(expertness_sum)
+        return self.expertness/expertness_sum
 
     def compute_expertness(self):
-        return self.dist_to_goal()
+        return 1/self.dist_to_goal()
 
     def dist_to_goal(self):
         y_diff = math.fabs(self.c_p[0]-self.goal_position[0])
