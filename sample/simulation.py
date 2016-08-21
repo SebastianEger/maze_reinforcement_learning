@@ -31,7 +31,7 @@ class Simulation:
             all_finished = True
             # shuffle(self.robot_controller.robot_list)
             for robot_it in self.robot_controller.robot_list:
-                robot_it.simSensors(robot_it.current_position, self.maze)   # simulate robot sensor
+                robot_it.ms.simSensors(robot_it.current_position, self.maze)   # simulate robot sensor
                 oldPosition = robot_it.current_position
                 goalReached, newPosition = robot_it.makeStep()
                 if goalReached:

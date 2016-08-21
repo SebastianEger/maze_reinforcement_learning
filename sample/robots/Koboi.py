@@ -1,8 +1,4 @@
-import time
-import math
-import numpy
-from basicRobot import BasicRobot
-from operator import add
+from sample.framework.basicRobot import BasicRobot
 
 
 # Expertness: Normal

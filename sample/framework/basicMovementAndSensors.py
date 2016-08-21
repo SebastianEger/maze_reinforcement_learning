@@ -1,5 +1,7 @@
 from operator import add
+from sample.framework.baseMovementAndSensors import BaseMovementAndSensors
 import numpy
+
 
 # converts action (North, East, South, West) to direction (Forward, Left, Backwards, Right)
 def getDirectionToMove(current_position, action):
@@ -42,8 +44,9 @@ def getDirectionToMove(current_position, action):
         return 4  # wait
 
 
-class BasicMovementAndSensors:
-    def __init__(self, maze):
+class BasicMovementAndSensors(BaseMovementAndSensors):
+    def __init__(self, basis, maze):
+        BaseMovementAndSensors.__init__(self, basis)
         self.rows, self.columns, self.dims = numpy.shape(maze)
         self.nActions = 4  # 0 = North, 1 = East, 2 = South, 3 = West
         self.nStates = self.rows*self.columns
@@ -53,7 +56,7 @@ class BasicMovementAndSensors:
         self.sim_sensor_right = 0
         self.sim_sensor_goal = 0  # goal = 1, no goal insight = 0
 
-    def getNextPos(self, action, current_position):  # returns position after q_action
+    def getNextPos(self, current_position, action):  # returns position after q_action
         if action == 0:
             target_pos = map(add, current_position, [-1,0,0])
             target_pos[2] = 0
@@ -96,7 +99,7 @@ class BasicMovementAndSensors:
         r_pos_down = map(add,current_position,[1,0,0])
         r_pos_left = map(add,current_position,[0,-1,0])
         r_pos_right = map(add,current_position,[0,1,0])
-        o = current_position[2] # orientation
+        o = current_position[2]  # orientation
         self.sim_sensor_front = 0
         self.sim_sensor_back = 0
         self.sim_sensor_left = 0

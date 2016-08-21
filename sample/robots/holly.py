@@ -1,6 +1,4 @@
-import math
-import numpy
-from basicRobot import BasicRobot
+from sample.framework.basicRobot import BasicRobot
 
 
 class Holly(BasicRobot):

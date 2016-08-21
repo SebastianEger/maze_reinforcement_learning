@@ -43,7 +43,7 @@ def startSim():
 
     """ Simulation """
     global sim
-    sim = simulation.Simulation(rc,maze)
+    sim = simulation.Simulation(rc, maze)
     sim.do_plot = False
     # sim.do_plot = do_plot.get()
     PB1.update_idletasks()

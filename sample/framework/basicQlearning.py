@@ -1,27 +1,19 @@
 import numpy
+from sample.framework.baseQLearning import BaseQLearning
 
-class BasicQlearning:
-    def __init__(self, maze, numberOfActions, numberOfStates):
+
+class BasicQlearning(BaseQLearning):
+    def __init__(self, basis, maze):
+        BaseQLearning.__init__(self, basis)
         rows, columns, dims = numpy.shape(maze)
-        self.Q = numpy.zeros((numberOfStates, numberOfActions), dtype=numpy.float)  # orientation x row x col
-
-        ''' Update parameters '''
-        self.learn_rate = 0.2
-        self.discount = 0.9
-
-        ''' Rewards '''
-        self.reward_wall = -10
-        self.reward_step = -0.01
-        self.reward_goal = 100
-        self.reward_robot = -0.01
+        self.Q = numpy.zeros((basis.ms.nStates, basis.ms.nActions), dtype=numpy.float)  # orientation x row x col
 
         ''' Other '''
-        self.exploration_rate = 0
-        self.last_reward = 0
+        self.lastReward = 0
         self.expertness = 0
 
     def updateQ(self, action, state, next_state, reward): # Main update function
-        self.last_reward = reward
+        self.lastReward = reward
         estimate = max(self.Q[next_state,:])
         # main update function
         self.Q[state, action] += self.learn_rate*(reward+self.discount*estimate-self.Q[state, action])*self.computeWeight()
