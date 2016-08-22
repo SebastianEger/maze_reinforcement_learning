@@ -1,10 +1,11 @@
 import numpy
 
-from robots import Holly, Koboi
+from robots import Koboi
 from sample.robots.Artemis import Artemis
 from sample.robots.Butler import Butler
 from sample.robots.Diggums import Diggums
 from sample.robots.Foaly import Foaly
+from sample.robots.Holly import Holly
 
 
 class RobotController:
@@ -43,7 +44,7 @@ class RobotController:
                 self.robot_list.append(new_robot)
         if robot == 'Holly':
             for _ in xrange(number):
-                new_robot = Holly.Holly(_,self.maze,robot)
+                new_robot = Holly.Holly(_, self.maze, robot)
                 new_robot.current_position = start_positions[_]
                 new_robot.goal_position = goal_positions[_]
                 self.robot_list.append(new_robot)
@@ -87,15 +88,15 @@ class RobotController:
         for _ in self.robot_list:
             _.exploration_rate = rate
 
-    def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, exploration_rate=0, cooperation_time = 0):
+    def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, exploration_rate=0, cooperation_time = 50):
         for robot in self.robot_list:
-            robot.q.learn_rate = learn_rate
-            robot.q.discount = discount
-            robot.q.reward_wall = reward_wall
-            robot.q.reward_step = reward_step
-            robot.q.reward_robot = reward_robot
-            robot.q.reward_goal = reward_goal
-            robot.e.exploration_rate = exploration_rate
+            robot.learn_rate = learn_rate
+            robot.discount = discount
+            robot.reward_wall = reward_wall
+            robot.reward_step = reward_step
+            robot.reward_robot = reward_robot
+            robot.reward_goal = reward_goal
+            robot.exploration_rate = exploration_rate
 
             if robot.name == "Koboi":
                 robot.cooperation_time = cooperation_time

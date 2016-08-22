@@ -10,10 +10,10 @@ from sample.framework.basicMovementAndSensors import BasicMovementAndSensors
 # Weighting: None
 
 
-class Artemis(BasicRobot):
+class Artemis(BasicRobot, BasicMovementAndSensors, BasicExploration, BasicQlearning):
     def __init__(self, id, maze, name):
-        self.ms = BasicMovementAndSensors(self, maze)
-        self.e = BasicExploration(self)
-        self.q = BasicQlearning(self, maze)
-
+        BasicMovementAndSensors.__init__(self, self, maze)
+        BasicExploration.__init__(self, self)
+        BasicQlearning.__init__(self, self, maze)
         BasicRobot.__init__(self, self, id, name, maze)
+        

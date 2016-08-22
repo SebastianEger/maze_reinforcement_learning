@@ -1,4 +1,4 @@
-from digExploration import DigExploration
+from sample.framework.advExploration import AdvExploration
 from sample.framework.basicQlearning import BasicQlearning
 from sample.framework.basicRobot import BasicRobot
 
@@ -9,13 +9,15 @@ from sample.framework.basicMovementAndSensors import BasicMovementAndSensors
 """
 
 
-class Diggums(BasicRobot):
+class Diggums(BasicRobot, BasicMovementAndSensors, BasicQlearning, AdvExploration):
     def __init__(self, id, maze, name):
-        self.ms = BasicMovementAndSensors(self, maze)
-        self.e = DigExploration(self, maze)
-        self.q = BasicQlearning(self, maze)
-
+        BasicMovementAndSensors.__init__(self, self, maze)
+        AdvExploration.__init__(self, self, maze)
+        BasicQlearning.__init__(self, self, maze)
         BasicRobot.__init__(self, self, id, name, maze)
 
     def set_q_shared(self, qmatrix):
-        self.q.Q = qmatrix
+        self.Q = qmatrix
+
+    def getExplorationRate(self):
+        return 1/(self.learningTrial/2 + 1)

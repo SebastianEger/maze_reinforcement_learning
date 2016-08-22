@@ -30,52 +30,44 @@ class BasicRobot(BaseRobot):
 
         self.addPosToHistory()
 
-        actions = self.basis.q.getActionList(self.basis.ms.getState(self.current_position)) # get action list from Q matrix
-        actions = self.basis.e.explore(actions)
+        actions = self.basis.getActionList(self.basis.getState(self.current_position)) # get action list from Q matrix
+        actions = self.basis.explore(actions)
 
         # check actions and get next position and reward
-        for action in actions:
-            next_position = self.basis.ms.getNextPos(self.current_position, action) # get target position
-            if self.basis.ms.checkAction(self.current_position, action):  # check action if no obstacle is in the way
-                self.move(action, next_position)  # move to new location and get reward
-                break  # do not check any further actions in actionslist
-            else:
-                self.stay(action, next_position)  # stay and get reward
+        if not self.basis.learnedFromRobots():
+            for action in actions:
+                next_position = self.basis.getNextPos(self.current_position, action) # get target position
+                if self.basis.checkAction(self.current_position, action):  # check action if no obstacle is in the way
+                    self.move(action, next_position)  # move to new location and get reward
+                    break  # do not check any further actions in actionslist
+                else:
+                    self.stay(action, next_position)  # stay and get reward
 
         return False, self.current_position
 
     def move(self, action, next_position):
+        reward = self.basis.reward_step
         if next_position[0] == self.goal_position[0] and next_position[1] == self.goal_position[1]:  # check if target is goal
-            self.basis.q.updateQ(action,
-                                 self.basis.ms.getState(self.current_position),
-                                 self.basis.ms.getState(next_position),
-                                 self.basis.q.reward_goal)  # update q with reward goal
-        else:
-            self.basis.q.updateQ(action,
-                                 self.basis.ms.getState(self.current_position),
-                                 self.basis.ms.getState(next_position),
-                                 self.basis.q.reward_step)  # update q with reward step
-        self.expertness = self.basis.q.computeExpertness()
+            reward = self.basis.reward_goal
+        self.basis.updateQ(action,
+                           self.basis.getState(self.current_position),
+                           self.basis.getState(next_position),
+                           self.basis.reward_step)  # update q with reward step
+        self.basis.expertness = self.basis.computeExpertness()
         self.current_position = next_position
 
     def stay(self, action, next_position):
-        is_robot = False
+        reward = self.basis.reward_wall
         for robot in self.robot_list:  # check if robot
             if next_position[0] == robot.current_position[0] and next_position[1] == robot.current_position[1]:
-                is_robot = True
+                reward = self.basis.reward_robot
                 break
 
-        if is_robot:
-            self.basis.q.updateQ(action,
-                                 self.basis.ms.getState(self.current_position),
-                                 self.basis.ms.getState(next_position),
-                                 self.basis.q.reward_robot) # update q with reward robot
-        else:
-            self.basis.q.updateQ(action,
-                                 self.basis.ms.getState(self.current_position),
-                                 self.basis.ms.getState(next_position),
-                                 self.basis.q.reward_wall) # update q with reward wall
-        self.expertness = self.basis.q.computeExpertness() # calcualte expertness
+        self.basis.updateQ(action,
+                           self.basis.getState(self.current_position),
+                           self.basis.getState(next_position),
+                           reward)  # update q with reward wall
+        self.basis.expertness = self.basis.computeExpertness()  # calculate expertness
 
     def goalIsReached(self): # function to determine if goal is reached
         if self.current_position[0] == self.goal_position[0] and self.current_position[1] == self.goal_position[1]:

@@ -9,7 +9,7 @@ class BasicExploration(BaseExploration):
     def explore(self, actionList):
         if numpy.random.random_sample(1) < self.getExplorationRate():
             actionList = []
-            for action in range(self.basis.ms.nActions):
+            for action in range(self.basis.nActions):
                 actionList.append(action)
             numpy.random.shuffle(actionList)
             return actionList

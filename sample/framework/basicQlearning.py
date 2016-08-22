@@ -6,7 +6,7 @@ class BasicQlearning(BaseQLearning):
     def __init__(self, basis, maze):
         BaseQLearning.__init__(self, basis)
         rows, columns, dims = numpy.shape(maze)
-        self.Q = numpy.zeros((basis.ms.nStates, basis.ms.nActions), dtype=numpy.float)  # orientation x row x col
+        self.Q = numpy.zeros((basis.nStates, basis.nActions), dtype=numpy.float)  # orientation x row x col
 
         ''' Other '''
         self.lastReward = 0
@@ -36,3 +36,6 @@ class BasicQlearning(BaseQLearning):
     def computeExpertness(self): # gets called when Q is updated
         # important variables: last_reward, expertness
         return 0
+
+    def learnedFromRobots(self):
+        return False

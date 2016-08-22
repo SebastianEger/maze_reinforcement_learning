@@ -9,7 +9,6 @@ class BaseMovementAndSensors(object):
         self.nActions = None
         self.nStates = None
 
-
     @abstractmethod
     def getNextPos(self, current_position, action):
         pass

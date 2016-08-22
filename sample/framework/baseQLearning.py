@@ -31,3 +31,7 @@ class BaseQLearning(object):
     @abstractmethod
     def computeExpertness(self):
         pass
+
+    @abstractmethod
+    def learnedFromRobots(self):
+        pass
