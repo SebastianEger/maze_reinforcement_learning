@@ -93,7 +93,7 @@ class BasicMovementAndSensors(BaseMovementAndSensors):
                 return False
         # if way is free, return true
         return True
-    
+
     def simSensors(self, current_position, maze):
         r_pos_top = map(add,current_position,[-1,0,0])
         r_pos_down = map(add,current_position,[1,0,0])

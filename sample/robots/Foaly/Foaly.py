@@ -10,17 +10,15 @@ from sample.framework.basicRobot import BasicRobot
 # Weight Calculation: Learning From All
 class Foaly(BasicRobot, BasicMovementAndSensors, AdvExploration, BasicQlearning):
 
-    def __init__(self, id, maze, name):
+    def __init__(self, id, maze, name, sharedqmatrix):
         BasicMovementAndSensors.__init__(self, self, maze)
-        AdvExploration.__init__(self, self, maze)
-        BasicQlearning.__init__(self, self, maze)
-        BasicRobot.__init__(self,self, id, name, maze)
-
-    def set_q_shared(self, qshared):
-        self.Q = qshared
+        AdvExploration.__init__(self, self)
+        BasicQlearning.__init__(self, self)
+        BasicRobot.__init__(self, self, id, name, maze)
+        self.Q = sharedqmatrix
 
     def computeExpertness(self):
-        return self.expertness+self.lastReward
+        return self.expertness+abs(self.lastReward)
 
     def computeWeight(self):
         expertness_sum = 0

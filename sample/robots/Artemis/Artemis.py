@@ -14,6 +14,9 @@ class Artemis(BasicRobot, BasicMovementAndSensors, BasicExploration, BasicQlearn
     def __init__(self, id, maze, name):
         BasicMovementAndSensors.__init__(self, self, maze)
         BasicExploration.__init__(self, self)
-        BasicQlearning.__init__(self, self, maze)
+        BasicQlearning.__init__(self, self)
         BasicRobot.__init__(self, self, id, name, maze)
-        
+
+    def computeWeight(self, robot):
+        a = 1/float(len(self.robot_list))
+        return a

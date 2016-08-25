@@ -1,14 +1,15 @@
 import Tkinter
-import ttk
-from threading import Thread
-import matplotlib.pyplot as plt
 import math
-import robotController
-import simulation
+import ttk
+
+import matplotlib.pyplot as plt
 import numpy
+
 from mazes import dfs_maze
 from mazes import random_maze
 from mazes import staticMazes
+from sample.robots import robotController
+from sample.simulation import simulation
 
 top = Tkinter.Tk()
 top.wm_title('Simulation panel')
@@ -17,17 +18,11 @@ plt.ion()
 maze = numpy.zeros((10,10,5))
 data = []
 rc = robotController.RobotController(maze)
-sim = simulation.Simulation(rc,maze)
+sim = simulation.Simulation(rc, maze)
 
-def startSimThread():
-    thread = Thread(target=startSim, args=[])
-    thread.start()
 
 def startSim():
     print 'Starting simulation!'
-    start_positions = []
-    goal_positions = []
-    numberRobots = int(E21.get())
     PB1["value"] = 0
     PB1["maximum"] = int(E22.get())
 
@@ -36,29 +31,24 @@ def startSim():
 
     """ Robot controller """
     global rc
-    robot_name = LB1.get(LB1.curselection()[0],LB1.curselection()[0])
+    robot_name = LB1.get(LB1.curselection()[0], LB1.curselection()[0])
     rc = robotController.RobotController(maze)
-    rc.init_robots(robot_name[0],start_positions,goal_positions)
-    rc.q_settings(float(E31.get()),float(E32.get()),float(E33.get()),float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()),float(E41.get()))
+    rc.init_robots(robot_name[0], start_positions, goal_positions)
+    rc.q_settings(float(E31.get()), float(E32.get()), float(E33.get()), float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()))
 
     """ Simulation """
     global sim
     sim = simulation.Simulation(rc, maze)
+    sim.cooperationTime = float(E41.get())
     sim.do_plot = False
     # sim.do_plot = do_plot.get()
     PB1.update_idletasks()
 
     global data
-    data = []
-    for i in xrange(int(E22.get())):
-        rc.reset_robots(start_positions,goal_positions)
-        data.append(sim.run_simulation())
-        PB1["value"] = i+1
-        PB1.update_idletasks()
+    data = sim.run_simulation(int(E22.get()), PB1)
 
     sim.do_plot = do_plot.get()
-    rc.reset_robots(start_positions,goal_positions)
-    sim.run_simulation()
+    sim.run_simulation(1)
     if data:
         T1.config(state=Tkinter.NORMAL)
         T1.insert('1.0','Simulation finished | avg steps: %f | \n' % (math.fsum(data)/len(data)))
@@ -128,11 +118,19 @@ def genStartGoalPositions():
 
 def restartSim():
     start_positions, goal_positions = genStartGoalPositions()
-    rc.q_settings(float(E31.get()),float(E32.get()),float(E33.get()),float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()),float(E41.get()))
+    rc.q_settings(float(E31.get()),
+                  float(E32.get()),
+                  float(E33.get()),
+                  float(E34.get()),
+                  float(E35.get()),
+                  float(E36.get()),
+                  float(E37.get()),
+                  float(E41.get()))
+    global data
     data = []
     PB1.update_idletasks()
     for i in xrange(int(E22.get())):
-        rc.reset_robots(start_positions,goal_positions)
+        rc.reset_robots(start_positions, goal_positions)
         data.append(sim.run_simulation())
         PB1["value"] = i+1
         PB1.update_idletasks()
@@ -148,14 +146,16 @@ def LB1onSelect(evt):
         T1.insert('1.0', 'Loaded Artemis | States: position        | Actions: North, East, South, West        | Individual Q-learning  |\n')
     if index == 1:
         T1.insert('1.0', 'Loaded Butler  | States: position        | Actions: North, East, South, West        | Cooperative Q-learning | Shared Q matrix      |\n')
+    if index == 2:
+        T1.insert('1.0', 'Loaded Diggums | States: pos,orientation | Actions: Forward, Right, Backwards, Left | Cooperative Q-learning | Shared Q matrix      |\n')
     if index == 3:
+        T1.insert('1.0', 'Loaded Foaly   | \n')
+    if index == 4:
         T1.insert('1.0', 'Loaded Koboi   | States: position        | Actions: North, East, South, West        | Cooperative Q-learning | Learning from all    | '
                          'Normal \n')
-    if index == 4:
+    if index == 5:
         T1.insert('1.0', 'Loaded Holly   | States: position        | Actions: North, East, South, West        | Cooperative Q-learning | Learning from Expert | '
                          'Distance to goal\n')
-    if index == 5:
-        T1.insert('1.0', 'Loaded Diggums | States: pos,orientation | Actions: Forward, Right, Backwards, Left | Cooperative Q-learning | Shared Q matrix      |\n')
     T1.config(state=Tkinter.DISABLED)
 
 
@@ -211,10 +211,10 @@ LB1 = Tkinter.Listbox(top, height=7, width=15, exportselection=0)
 LB1.grid(row=1,column = 0, rowspan=5)
 LB1.insert(Tkinter.END, "Artemis")
 LB1.insert(Tkinter.END, "Butler")
+LB1.insert(Tkinter.END, "Diggums")
 LB1.insert(Tkinter.END, "Foaly")
 LB1.insert(Tkinter.END, "Koboi")
 LB1.insert(Tkinter.END, "Holly")
-LB1.insert(Tkinter.END, "Diggums")
 LB1.bind('<<ListboxSelect>>', LB1onSelect)
 
 T1 = Tkinter.Text(top, height=14, width=180)
@@ -323,7 +323,7 @@ E37.grid(row = 3, column = 9)
 Tkinter.Label(top, text="Cooperation time").grid(row=1, column = 10)
 E41 = Tkinter.Entry(top, bd =2,width = 4)
 E41.config(justify=Tkinter.CENTER)
-E41.insert(3,'50')
+E41.insert(3,'-1')
 E41.grid(row = 1, column = 11)
 
 PB1 = ttk.Progressbar(top, orient="horizontal", length=120, mode="determinate")

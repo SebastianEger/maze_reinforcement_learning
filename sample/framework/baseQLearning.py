@@ -25,7 +25,7 @@ class BaseQLearning(object):
         pass
 
     @abstractmethod
-    def computeWeight(self):
+    def computeWeight(self, robot):
         pass
 
     @abstractmethod

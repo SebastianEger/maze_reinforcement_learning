@@ -8,8 +8,8 @@ from sample.framework.baseRobot import BaseRobot
 
 
 class BasicRobot(BaseRobot):
-    def __init__(self, basis, id, name, maze):
-        BaseRobot.__init__(self, basis, id, name)
+    def __init__(self, basis, idnr, name, maze):
+        BaseRobot.__init__(self, basis, idnr, name)
         self.madeSteps = 0
         self.learningTrial = 0
 
@@ -21,6 +21,7 @@ class BasicRobot(BaseRobot):
         self.traveled_map[:,-1,0] = 1
         self.traveled_map[0,:,0] = 1
         self.traveled_map[-1,:,0] = 1
+
 
     """ main function for robot, makes one step each call """
     def makeStep(self):
@@ -42,6 +43,7 @@ class BasicRobot(BaseRobot):
                     break  # do not check any further actions in actionslist
                 else:
                     self.stay(action, next_position)  # stay and get reward
+                    break
 
         return False, self.current_position
 
@@ -52,7 +54,7 @@ class BasicRobot(BaseRobot):
         self.basis.updateQ(action,
                            self.basis.getState(self.current_position),
                            self.basis.getState(next_position),
-                           self.basis.reward_step)  # update q with reward step
+                           reward)  # update q with reward step
         self.basis.expertness = self.basis.computeExpertness()
         self.current_position = next_position
 
@@ -62,14 +64,13 @@ class BasicRobot(BaseRobot):
             if next_position[0] == robot.current_position[0] and next_position[1] == robot.current_position[1]:
                 reward = self.basis.reward_robot
                 break
-
         self.basis.updateQ(action,
                            self.basis.getState(self.current_position),
                            self.basis.getState(next_position),
                            reward)  # update q with reward wall
         self.basis.expertness = self.basis.computeExpertness()  # calculate expertness
 
-    def goalIsReached(self): # function to determine if goal is reached
+    def goalIsReached(self):  # function to determine if goal is reached
         if self.current_position[0] == self.goal_position[0] and self.current_position[1] == self.goal_position[1]:
             return True
         return False
@@ -84,6 +85,6 @@ class BasicRobot(BaseRobot):
         self.learningTrial += 1
         self.traveled_map = numpy.zeros(numpy.shape(self.traveled_map), dtype=numpy.float) # map to store already visited locations
         self.traveled_map[:, 0, 0] = 1
-        self.traveled_map[:,-1,0] = 1
-        self.traveled_map[0,:,0] = 1
-        self.traveled_map[-1,:,0] = 1
+        self.traveled_map[:, -1, 0] = 1
+        self.traveled_map[0, :, 0] = 1
+        self.traveled_map[-1, :, 0] = 1

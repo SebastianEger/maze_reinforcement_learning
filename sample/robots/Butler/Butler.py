@@ -6,11 +6,9 @@ from sample.framework.basicMovementAndSensors import BasicMovementAndSensors
 
 
 class Butler(BasicRobot, BasicExploration, BasicMovementAndSensors, BasicQlearning):
-    def __init__(self, id, maze, name):
+    def __init__(self, id, maze, name, sharedQmatrix):
         BasicMovementAndSensors.__init__(self, self, maze)
         BasicExploration.__init__(self, self)
-        BasicQlearning.__init__(self, self, maze)
+        BasicQlearning.__init__(self, self)
         BasicRobot.__init__(self, self, id, name, maze)
-
-    def set_q_shared(self, qmatrix):
-        self.Q = qmatrix
+        self.Q = sharedQmatrix

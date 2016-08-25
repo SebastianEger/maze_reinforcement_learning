@@ -3,7 +3,7 @@ import numpy
 
 
 class AdvExploration(BaseExploration):
-    def __init__(self, basis, maze):
+    def __init__(self, basis):
         BaseExploration.__init__(self, basis)
 
     def explore(self, actionList):

@@ -32,7 +32,5 @@ class AdvQLearning(BasicQlearning):
                 Qtmp = numpy.zeros_like(robot.Q)
                 numpy.copyto(Qtmp, robot.Q)
                 self.Qnew[:, :] += Qtmp*self.computeWeight()
-            print self.basis.id
-            print self.Qnew
             self.cooperation_counter = 0
             return True
