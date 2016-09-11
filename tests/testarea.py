@@ -1,15 +1,21 @@
-import numpy as np
-import matplotlib.pyplot as plt
+class Test:
+    _modul = 5
 
-maze = np.zeros((4,8,5),dtype=np.uint8)
-maze[0,:,0] = 1
-maze[3,:,0] = 1
-maze[:,0,0] = 1
-maze[:,7,0] = 1
-maze[1,2,0] = 1
-maze[1,4,0] = 1
-maze[1,5,0] = 1
+    def __init__(self):
+        self.mod = 5
 
-plt.figure(figsize=(10, 10))
-plt.imshow(maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
-plt.show()
+    def setModul(self, a):
+        self._modul = a
+
+    def getModul(self):
+        return self._modul
+
+
+
+test1 = Test()
+test2 = Test()
+test3 = Test()
+
+test3.setModul(113)
+
+print test1.getModul(), test2.getModul(), test3.getModul()
