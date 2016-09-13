@@ -1,16 +1,13 @@
-import Tkinter
-import math
+from Tkinter import *
 import ttk
-import matplotlib
+import math
 import matplotlib.pyplot as plt
 import numpy
 from mazes import dfs_maze, random_maze, staticMazes
 from robots import robotController
 from simulation import simulation
 
-# matplotlib.use("TkAgg")
-
-top = Tkinter.Tk()
+top = Tk()
 top.wm_title('Simulation panel')
 plt.ion()
 
@@ -19,15 +16,15 @@ data = []
 rc = robotController.RobotController(maze)
 sim = simulation.Simulation(rc, maze)
 
-vMOV = Tkinter.StringVar(top)
-vEXP = Tkinter.StringVar(top)
-vQRL = Tkinter.StringVar(top)
-vAction = Tkinter.StringVar(top)
+vMOV = StringVar(top)
+vEXP = StringVar(top)
+vQRL = StringVar(top)
+vAction = StringVar(top)
 
 def writeConsole(text):
-    T1.config(state=Tkinter.NORMAL)
+    T1.config(state=NORMAL)
     T1.insert('1.0', text + '\n')
-    T1.config(state=Tkinter.DISABLED)
+    T1.config(state=DISABLED)
 
 def startSim():
     print 'Starting simulation!'
@@ -40,7 +37,7 @@ def startSim():
     """ Robot controller """
     global rc
     rc = robotController.RobotController(maze)
-    success, message = rc.init_robots([vMOV.get(), vQRL.get(), vEXP.get(), useQshared.get()], start_positions, goal_positions)
+    success, message = rc.initAgents([vMOV.get(), vQRL.get(), vEXP.get(), useQshared.get()], start_positions, goal_positions)
     writeConsole(message)
 
     if not success:
@@ -64,9 +61,9 @@ def startSim():
 
     """ Show results """
     if data:
-        T1.config(state=Tkinter.NORMAL)
+        T1.config(state=NORMAL)
         T1.insert('1.0','Simulation finished! - Sum steps: %f - Avg steps: %f \n' % (math.fsum(data), (math.fsum(data)/len(data))))
-        T1.config(state=Tkinter.DISABLED)
+        T1.config(state=DISABLED)
 
 def genStartGoalPositions():
     start_positions = []
@@ -92,9 +89,7 @@ def genStartGoalPositions():
             goal_positions.append([maze_shape[0]-2,maze_shape[1]-2,0])
     return start_positions, goal_positions
 
-
 def restartSim():
-    start_positions, goal_positions = genStartGoalPositions()
     rc.q_settings(float(E31.get()),
                   float(E32.get()),
                   float(E33.get()),
@@ -117,7 +112,7 @@ def LB2onSelect(evt):
     global maze
     w = evt.widget
     index = int(w.curselection()[0])
-    T1.config(state=Tkinter.NORMAL)
+    T1.config(state=NORMAL)
     if index == 0:
         T1.insert('1.0', 'Loaded Static Maze 1\n')
     if index == 1:
@@ -127,7 +122,7 @@ def LB2onSelect(evt):
     if index == 3:
         pass
     generateMaze()
-    T1.config(state=Tkinter.DISABLED)
+    T1.config(state=DISABLED)
 
 def generateMaze():
     global maze
@@ -180,177 +175,217 @@ def showDecisionMaze():
                 plt.arrow(jj+0.4, ii, -0.8, 0, color='b', head_width=0.1, head_length=0.1)
     plt.show()
 
-Tkinter.Label(top, text="Agent settings",font = "Helvetica 14 bold italic").grid(row=0, column = 0)
-Tkinter.Label(top, text="Maze",font = "Helvetica 14 bold italic").grid(row=0, column = 1)
-Tkinter.Label(top, text="Random maze settings", font = "Helvetica 14 bold italic").grid(row=0, column = 2, columnspan=2)
-Tkinter.Label(top, text="Simulation settings", font = "Helvetica 14 bold italic").grid(row=0, column = 4, columnspan=2)
-Tkinter.Label(top, text="Q-learning settings", font = "Helvetica 14 bold italic").grid(row=0, column = 6, columnspan=4)
-Tkinter.Label(top, text="Additional Options", font = "Helvetica 14 bold italic").grid(row=0, column = 10, columnspan=2)
+Label(top, text="Agent settings",font = "Helvetica 14 bold italic").grid(row=0, column = 0, sticky=W)
 
-""" Console """
-T1 = Tkinter.Text(top, height=14, width=180)
-T1.grid(row=11,column=0, rowspan=5, columnspan=12)
-T1.config(state=Tkinter.DISABLED)
+frameAgentCreator = Frame(bd=2, relief=GROOVE)
+frameAgentCreator.grid(row=1, column=0, sticky=EW)
 
 """ Robot Builder """
-Tkinter.Label(top, text="Movement model").grid(row=1, column = 0)
+Label(frameAgentCreator, text="Movement model").grid(row=1, column = 0)
 vMOV.set("North East South West") # default value
-OM1 = Tkinter.OptionMenu(top, vMOV, "North East South West", "Forward Backward Turn")
-OM1.grid(row=2,column = 0, sticky=Tkinter.EW)
-OM1.config(justify=Tkinter.LEFT)
+OM1 = OptionMenu(frameAgentCreator, vMOV, "North East South West", "Forward Backward Turn", "Forward Right Backward Left")
+OM1.grid(row=1,column = 1, sticky=EW)
+OM1.config(justify=LEFT)
 
-Tkinter.Label(top, text="Exploration model").grid(row=3, column = 0)
+Label(frameAgentCreator, text="Exploration model").grid(row=2, column = 0)
 vEXP.set("Random") # default value
-OM2 = Tkinter.OptionMenu(top, vEXP, "Random", "Smart Random", "Decreasing Exploration Rate")
-OM2.grid(row=4,column = 0, sticky=Tkinter.EW)
-OM2.config(justify=Tkinter.LEFT)
+OM2 = OptionMenu(frameAgentCreator, vEXP, "Random", "Smart Random", "Decreasing Exploration Rate")
+OM2.grid(row=2,column = 1, sticky=EW)
+OM2.config(justify=LEFT)
 
-Tkinter.Label(top, text="Reinforcement model").grid(row=5, column = 0)
+Label(frameAgentCreator, text="Reinforcement model").grid(row=1, column = 2)
 vQRL.set("Basic Q learning") # default value
-OM3 = Tkinter.OptionMenu(top, vQRL, "Basic Q learning", "Weighted Q learning")
-OM3.grid(row=6,column = 0, sticky=Tkinter.EW)
-OM3.config(justify=Tkinter.LEFT)
+OM3 = OptionMenu(frameAgentCreator, vQRL, "Basic Q learning", "Weighted Q learning")
+OM3.grid(row=1,column = 3, sticky=EW)
+OM3.config(justify=LEFT)
 
-Tkinter.Label(top, text="Step counting rule").grid(row=7, column = 0)
+Label(frameAgentCreator, text="Step counting rule").grid(row=2, column = 2)
 vAction.set("Do one step each round") # default value
-OM3 = Tkinter.OptionMenu(top, vAction, "Do one step each round", "Do one action each round")
-OM3.grid(row=8, column = 0, sticky=Tkinter.EW)
-OM3.config(justify=Tkinter.LEFT)
+OM4 = OptionMenu(frameAgentCreator, vAction, "Do one step each round", "Do one action each round")
+OM4.grid(row=2, column = 3, sticky=EW)
+OM4.config(justify=LEFT)
 
-LB2 = Tkinter.Listbox(top, exportselection=0)
-LB2.grid(row=1,column = 1, rowspan=5)
-LB2.insert(Tkinter.END, "Static maze 1")
-LB2.insert(Tkinter.END, "Depth-first search maze")
-LB2.insert(Tkinter.END, "URMG")
-LB2.insert(Tkinter.END, "Static maze 3")
-LB2.insert(Tkinter.END, "DFS special")
+variable1 = StringVar(top)
+Label(frameAgentCreator, text="Exploration rate rule").grid(row=1, column = 4)
+variable1.set("Constant") # default value
+OM5 = OptionMenu(frameAgentCreator, variable1, "Constant", "Decreasing over steps")
+OM5.grid(row=1, column = 5, sticky=EW)
+OM5.config(justify=LEFT)
+
+
+variable2 = StringVar(top)
+Label(frameAgentCreator, text="Goal setting").grid(row=2, column = 4)
+variable2.set("One Goal") # default value
+OM6 = OptionMenu(frameAgentCreator, variable2, "One Goal", "Multiple Goals")
+OM6.grid(row=2, column = 5, sticky=EW)
+
+
+frameSettings = Frame(bd=2, relief=GROOVE)
+frameSettings.grid(row=4, column=0)
+
+""" Maze selection """
+Label(frameSettings, text="Maze",font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 0)
+LB2 = Listbox(frameSettings, exportselection=0)
+LB2.grid(row=1,column = 0, rowspan = 5)
+LB2.insert(END, "Static maze 1")
+LB2.insert(END, "Depth-first search maze")
+LB2.insert(END, "URMG")
+LB2.insert(END, "Static maze 3")
+LB2.insert(END, "DFS special")
 LB2.bind('<<ListboxSelect>>', LB2onSelect)
 
-Tkinter.Label(top, text="Height").grid(row=1, column = 2)
-E11 = Tkinter.Entry(top, bd =2,width = 3)
-E11.config(justify=Tkinter.CENTER)
+""" Maze settings """
+Label(frameSettings, text="Random maze settings", font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 1, columnspan=2)
+
+startColumn = 1
+startRow = 1
+Label(frameSettings, text="Height").grid(row=startRow, column = startColumn)
+E11 = Entry(frameSettings, bd =2,width = 3)
+E11.config(justify=CENTER)
 E11.insert(3,'10')
-E11.grid(row = 1, column = 3)
+E11.grid(row = startRow, column = startColumn+1)
 
-Tkinter.Label(top, text="Width").grid(row=2, column = 2)
-E12 = Tkinter.Entry(top, bd =2,width = 3)
-E12.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Width").grid(row=startRow+1, column = startColumn)
+E12 = Entry(frameSettings, bd =2,width = 3)
+E12.config(justify=CENTER)
 E12.insert(3,'10')
-E12.grid(row = 2, column = 3)
+E12.grid(row = startRow+1, column = startColumn+1)
 
-Tkinter.Label(top, text="Density").grid(row=3, column = 2)
-E13 = Tkinter.Entry(top, bd =2,width = 3)
-E13.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Density").grid(row=startRow+2, column = startColumn)
+E13 = Entry(frameSettings, bd =2,width = 3)
+E13.config(justify=CENTER)
 E13.insert(4,'0.75')
-E13.grid(row = 3, column = 3)
+E13.grid(row = startRow+2, column = startColumn+1)
 
-Tkinter.Label(top, text="Complexity").grid(row=4, column = 2)
-E14 = Tkinter.Entry(top, bd =2,width = 3)
-E14.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Complexity").grid(row=startRow+3, column = startColumn)
+E14 = Entry(frameSettings, bd =2,width = 3)
+E14.config(justify=CENTER)
 E14.insert(4,'0.75')
-E14.grid(row = 4, column = 3)
+E14.grid(row = startRow+3, column = startColumn+1)
 
 """ Simulation settings """
+Label(frameSettings, text="Simulation settings", font = "Helvetica 14 bold italic", width = 25).grid(row=0, column = 3, columnspan=2)
 
-Tkinter.Label(top, text="Number robots").grid(row=1, column = 4)
-E21 = Tkinter.Entry(top, bd =2,width = 3)
-E21.config(justify=Tkinter.CENTER)
+startColumn = 3
+startRow = 1
+
+Label(frameSettings, text="Number robots").grid(row=startRow, column = startColumn)
+E21 = Entry(frameSettings, bd =2,width = 3)
+E21.config(justify=CENTER)
 E21.insert(3,'10')
-E21.grid(row = 1, column = 5)
+E21.grid(row = startRow, column = startColumn+1)
 
-Tkinter.Label(top, text="Iterations").grid(row=2, column = 4)
-E22 = Tkinter.Entry(top, bd =2,width = 3)
-E22.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Iterations").grid(row=startRow+1, column = startColumn)
+E22 = Entry(frameSettings, bd =2,width = 3)
+E22.config(justify=CENTER)
 E22.insert(4,'50')
-E22.grid(row = 2, column = 5)
+E22.grid(row = startRow+1, column = startColumn+1)
 
-Tkinter.Label(top, text="Max steps").grid(row=3, column = 4)
-E23 = Tkinter.Entry(top, bd =2, width = 3)
-E23.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Max steps").grid(row=startRow+2, column = startColumn)
+E23 = Entry(frameSettings, bd =2, width = 3)
+E23.config(justify=CENTER)
 E23.insert(3, '-1')
-E23.grid(row=3, column=5)
+E23.grid(row=startRow+2, column=startColumn+1)
 
 """ Q learning settings """
+Label(frameSettings, text="Q-learning settings", font = "Helvetica 14 bold italic", width = 50).grid(row=0, column = 5, columnspan=4)
 
-Tkinter.Label(top, text="Learn rate").grid(row=1, column = 6)
-E31 = Tkinter.Entry(top, bd =2,width = 3)
-E31.config(justify=Tkinter.CENTER)
+
+startColumn = 5
+startRow = 1
+
+Label(frameSettings, text="Learn rate").grid(row=startRow, column = startColumn)
+E31 = Entry(frameSettings, bd =2,width = 3)
+E31.config(justify=CENTER)
 E31.insert(3,'0.2')
-E31.grid(row = 1, column = 7)
+E31.grid(row = startRow, column = startColumn+1)
 
-Tkinter.Label(top, text="Discount").grid(row=2, column = 6)
-E32 = Tkinter.Entry(top, bd =2,width = 3)
-E32.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Discount").grid(row=startRow+1, column = startColumn)
+E32 = Entry(frameSettings, bd =2,width = 3)
+E32.config(justify=CENTER)
 E32.insert(3,'0.9')
-E32.grid(row = 2, column = 7)
+E32.grid(row = startRow+1, column = startColumn+1)
 
-Tkinter.Label(top, text="Reward goal").grid(row=3, column = 6)
-E33 = Tkinter.Entry(top, bd =2,width = 3)
-E33.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Reward goal").grid(row=startRow+2, column = startColumn)
+E33 = Entry(frameSettings, bd =2,width = 3)
+E33.config(justify=CENTER)
 E33.insert(3,'100')
-E33.grid(row = 3, column = 7)
+E33.grid(row = startRow+2, column = startColumn+1)
 
-Tkinter.Label(top, text="Reward wall").grid(row=4, column = 6)
-E34 = Tkinter.Entry(top, bd =2,width = 3)
-E34.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Reward wall").grid(row=startRow+3, column = startColumn)
+E34 = Entry(frameSettings, bd =2,width = 3)
+E34.config(justify=CENTER)
 E34.insert(3,'-10')
-E34.grid(row = 4, column = 7)
+E34.grid(row = startRow+3, column = startColumn+1)
 
-Tkinter.Label(top, text="Reward robot").grid(row=1, column = 8)
-E35 = Tkinter.Entry(top, bd =2,width = 4)
-E35.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Reward robot").grid(row=startRow, column = startColumn+2)
+E35 = Entry(frameSettings, bd =2,width = 4)
+E35.config(justify=CENTER)
 E35.insert(3,'-0.01')
-E35.grid(row = 1, column = 9)
+E35.grid(row = startRow, column = startColumn+3)
 
-Tkinter.Label(top, text="Reward step").grid(row=2, column = 8)
-E36 = Tkinter.Entry(top, bd =2,width = 4)
-E36.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Reward step").grid(row=startRow+1, column = startColumn+2)
+E36 = Entry(frameSettings, bd =2,width = 4)
+E36.config(justify=CENTER)
 E36.insert(3,'-0.01')
-E36.grid(row = 2, column = 9)
+E36.grid(row = startRow+1, column = startColumn+3)
 
-Tkinter.Label(top, text="Exploration rate").grid(row=3, column = 8)
-E37 = Tkinter.Entry(top, bd =2,width = 4)
-E37.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Exploration rate").grid(row=startRow+2, column = startColumn+2)
+E37 = Entry(frameSettings, bd =2,width = 4)
+E37.config(justify=CENTER)
 E37.insert(3,'0')
-E37.grid(row = 3, column = 9)
+E37.grid(row = startRow+2, column = startColumn+3)
 
-Tkinter.Label(top, text="Cooperation time").grid(row=4, column = 8)
-E41 = Tkinter.Entry(top, bd =2,width = 4)
-E41.config(justify=Tkinter.CENTER)
+Label(frameSettings, text="Cooperation time").grid(row=startRow+3, column = startColumn+2)
+E41 = Entry(frameSettings, bd =2,width = 4)
+E41.config(justify=CENTER)
 E41.insert(3,'-1')
-E41.grid(row = 4, column = 9)
+E41.grid(row = startRow+3, column = startColumn+3)
 
 """ Additional options """
-useQshared = Tkinter.IntVar()
-Tkinter.Label(top, text="Use shared Q matrix").grid(row=1, column = 10)
-C31 = Tkinter.Checkbutton(top,variable=useQshared)
-C31.grid(row = 1, column = 11)
+Label(frameSettings, text="Additional Options", font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 9, columnspan=2)
+
+useQshared = IntVar()
+Label(frameSettings, text="Use shared Q matrix").grid(row=1, column = 9)
+C31 = Checkbutton(frameSettings,variable=useQshared)
+C31.grid(row = 1, column = 10)
 
 """ Buttons """
-B2 = Tkinter.Button(top, text ="Generate maze", command = generateMaze)
-B2.grid(row=6, column=2, columnspan=2)
-B4 = Tkinter.Button(top, text ="Show maze", command = showMaze)
-B4.grid(row=6, column=1)
+startColumn = 0
+startRow = 9
 
-B1 = Tkinter.Button(top, text ="Start simulation", command = startSim)
-B1.grid(row=6, column=4, columnspan=2)
-B3 = Tkinter.Button(top, text ="Restart simulation", command = restartSim)
-B3.grid(row=7, column=4, columnspan=2)
+B4 = Button(frameSettings, text ="Show maze", command = showMaze)
+B4.grid(row=startRow, column=startColumn)
 
-B5 = Tkinter.Button(top, text ="Plot data", command = plotData)
-B5.grid(row=6, column=10, columnspan=2)
+B2 = Button(frameSettings, text ="Generate maze", command = generateMaze)
+B2.grid(row=startRow, column=startColumn+1, columnspan=2)
 
-B6 = Tkinter.Button(top, text ="Visualize", command = visualize)
-B6.grid(row=7, column=10, columnspan=2)
+B1 = Button(frameSettings, text ="Start simulation", command = startSim)
+B1.grid(row=startRow, column=startColumn+3, columnspan=2)
+B3 = Button(frameSettings, text ="Restart simulation", command = restartSim)
+B3.grid(row=startRow+1, column=startColumn+3, columnspan=2)
 
-B7 = Tkinter.Button(top, text ="Decision maze (only NESW model)", command = showDecisionMaze)
-B7.grid(row=8, column=10, columnspan=2)
+B5 = Button(frameSettings, text ="Plot data", command = plotData)
+B5.grid(row=startRow, column=startColumn+9, columnspan=2)
+
+B6 = Button(frameSettings, text ="Visualize", command = visualize)
+B6.grid(row=startRow+1, column=startColumn+9, columnspan=2)
+
+B7 = Button(frameSettings, text ="Decision maze (only NESW model)", command = showDecisionMaze)
+B7.grid(row=startRow+2, column=startColumn+9, columnspan=2)
+
 
 
 """ Progressbar """
-PB1 = ttk.Progressbar(top, orient="horizontal", length=1440, mode="determinate")
-PB1.grid(row=10, column=0, columnspan = 12)
+PB1 = ttk.Progressbar(top, orient="horizontal", mode="determinate")
+PB1.grid(row=5, column=0, sticky=EW)
 PB1["value"] = 0
 PB1["maximum"] = int(E22.get())
+
+""" Console """
+T1 = Text(top, height=14, width=180)
+T1.grid(row=6,column=0)
+T1.config(state=DISABLED)
+
 
 top.mainloop()

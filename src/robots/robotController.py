@@ -4,7 +4,7 @@ import numpy
 from src.framework.agent.mazerobot.mazerobot import MazeRobot
 from src.framework.exploration.random import randomexploration, smartrandomexploration
 from src.framework.learning.qlearning import basicQlearning, weightedqlearning
-from src.framework.movement.discrete import northeastsouthwest, forwardbackwardturn
+from src.framework.movement.discrete import northeastsouthwest, forwardbackwardturn, forwardrightbackwardleft
 # from src.robots.Artemis import Artemis
 # from src.robots.Butler import Butler
 # from src.robots.Diggums import Diggums
@@ -29,28 +29,30 @@ class RobotController:
         """ Butler """
         self.sharedQmatrix = None
 
-    def init_robots(self, configuration, start_positions, goal_positions):
+    def initAgents(self, configuration, start_positions, goal_positions):
         self.startPositions = start_positions
         self.goalPositions = goal_positions
         number = len(start_positions)
         print configuration
         for robotID in xrange(number):
 
-            mas = None
+            mov = None
             if configuration[0] == 'North East South West':
-                mas = northeastsouthwest.NorthEastSouthWest(self.maze)
+                mov = northeastsouthwest.NorthEastSouthWest(self.maze)
             elif configuration[0] == 'Forward Backward Turn':
-                mas = forwardbackwardturn.ForwardBackwardTurn(self.maze)
+                mov = forwardbackwardturn.ForwardBackwardTurn(self.maze)
+            elif configuration[0] == 'Forward Right Backward Left':
+                mov = forwardrightbackwardleft.ForwardRightBackwardLeft(self.maze)
             else:
-                return False, "This movement model doesn't exist!"
+                return False, "This movement model wasn't implemented yet!"
 
             qrl = None
             if configuration[1] == 'Basic Q learning':
-                qrl = basicQlearning.BasicQlearning(mas)
+                qrl = basicQlearning.BasicQlearning(mov)
             elif configuration[1] == 'Weighted Q learning':
-                qrl = weightedqlearning.WeightedQlearning(mas)
+                qrl = weightedqlearning.WeightedQlearning(mov)
             else:
-                return False, "This reinforcement model doesn't exist!"
+                return False, "This reinforcement model wasn't implemented yet!"
 
             exp = None
             if configuration[2] == 'Random':
@@ -58,9 +60,9 @@ class RobotController:
             elif configuration[2] == 'Smart Random':
                 exp = smartrandomexploration.SmartRandomExploration()
             else:
-                return False, "This exploration model doesn't exist!"
+                return False, "This exploration model wasn't implemented yet!"
 
-            modules = [mas, qrl, exp]
+            modules = [mov, qrl, exp]
 
             newRobot = MazeRobot(robotID, modules, self.maze)
             newRobot.current_position = start_positions[robotID]
@@ -77,7 +79,7 @@ class RobotController:
         for robot in self.robot_list:
             robot.robot_list = self.robot_list
 
-        return True, 'Agents init successfully!: ' \
+        return True, 'Agents were successfully initiated! Configuration: ' \
                + configuration[0] \
                + ' - ' + configuration[1] \
                + ' - ' + configuration[2]

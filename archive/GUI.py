@@ -33,7 +33,7 @@ def startSim():
     global rc
     robot_name = LB1.get(LB1.curselection()[0], LB1.curselection()[0])
     rc = robotController.RobotController(maze)
-    rc.init_robots(robot_name[0], start_positions, goal_positions)
+    rc.initAgents(robot_name[0], start_positions, goal_positions)
     rc.q_settings(float(E31.get()), float(E32.get()), float(E33.get()), float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()))
 
     """ Simulation """
