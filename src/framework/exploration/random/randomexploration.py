@@ -9,7 +9,7 @@ class RandomExploration(BaseExploration):
 
     def getActionList(self, basis, actionList):
         actionList = []
-        for action in range(basis.mas.nActions()):
+        for action in range(basis.mov.nActions):
             actionList.append(action)
         numpy.random.shuffle(actionList)
         return actionList

@@ -1,10 +1,14 @@
 import Tkinter
 import math
 import ttk
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+
 
 import matplotlib.pyplot as plt
 import numpy
-
 from mazes import dfs_maze
 from mazes import random_maze
 from mazes import staticMazes
@@ -53,40 +57,11 @@ def startSim():
     global data
     data = sim.run(int(E22.get()), PB1)
 
-    """ Do plot run """
-    sim.do_plot = do_plot.get()
-    sim.run(1)
-
     """ Show results """
     if data:
         T1.config(state=Tkinter.NORMAL)
         T1.insert('1.0','Simulation finished | avg steps: %f | \n' % (math.fsum(data)/len(data)))
         T1.config(state=Tkinter.DISABLED)
-    if sim.do_plot:
-        plt.clf()
-
-    '''
-    plt.imshow(maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
-    row, col, dim = numpy.shape(maze)
-    qM = numpy.zeros((row,col))
-    for ii in xrange(row):
-        for jj in xrange(col):
-            ind = jj*row + ii
-            actions_unsorted = list(rc.butler_sq[ind,:])
-            actions_sorted = [i[0] for i in sorted(enumerate(actions_unsorted), key=lambda x:x[1],reverse=True)]
-            qM[ii,jj] = actions_sorted[0]
-            if maze[ii,jj,0] == 1:
-                continue
-            if actions_sorted[0] == 0:
-                plt.arrow(jj, ii+0.4, 0, -0.8, color='b', head_width=0.1, head_length=0.1)
-            elif actions_sorted[0] == 1:
-                plt.arrow(jj-0.4, ii, 0.8, 0, color='b', head_width=0.1, head_length=0.1)
-            elif actions_sorted[0] == 2:
-                plt.arrow(jj, ii-0.4, 0, 0.8, color='b', head_width=0.1, head_length=0.1)
-            elif actions_sorted[0] == 3:
-                plt.arrow(jj+0.4, ii, -0.8, 0, color='b', head_width=0.1, head_length=0.1)
-    plt.show()
-    '''
 
 def genStartGoalPositions():
     start_positions = []
@@ -161,7 +136,7 @@ def generateMaze():
         maze = staticMazes.get_static_maze_3()
     if LB2.curselection() == (4,):
         maze = dfs_maze.generate_maze_special(int(E11.get()), int(E12.get()))
-    showMaze()
+    # showMaze()
 
 def showMaze():
     global maze
@@ -173,38 +148,68 @@ def plotData():
     global data
     plt.plot(data)
 
+def visualize():
+    sim.do_plot = True
+    sim.run(1)
+    plt.clf()
 
-Tkinter.Label(top, text="Robot",font = "Helvetica 14 bold italic").grid(row=0, column = 0)
+def showDecisionMaze():
+    plt.imshow(maze[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
+    row, col, dim = numpy.shape(maze)
+    qM = numpy.zeros((row,col))
+    for ii in xrange(row):
+        for jj in xrange(col):
+            ind = jj*row + ii
+            actions_unsorted = list(rc.sharedQmatrix[ind,:])
+            actions_sorted = [i[0] for i in sorted(enumerate(actions_unsorted), key=lambda x:x[1],reverse=True)]
+            qM[ii,jj] = actions_sorted[0]
+            if maze[ii,jj,0] == 1:
+                continue
+            if actions_sorted[0] == 0:
+                plt.arrow(jj, ii+0.4, 0, -0.8, color='b', head_width=0.1, head_length=0.1)
+            elif actions_sorted[0] == 1:
+                plt.arrow(jj-0.4, ii, 0.8, 0, color='b', head_width=0.1, head_length=0.1)
+            elif actions_sorted[0] == 2:
+                plt.arrow(jj, ii-0.4, 0, 0.8, color='b', head_width=0.1, head_length=0.1)
+            elif actions_sorted[0] == 3:
+                plt.arrow(jj+0.4, ii, -0.8, 0, color='b', head_width=0.1, head_length=0.1)
+    plt.show()
+
+Tkinter.Label(top, text="Agent settings",font = "Helvetica 14 bold italic").grid(row=0, column = 0)
 Tkinter.Label(top, text="Maze",font = "Helvetica 14 bold italic").grid(row=0, column = 1)
-Tkinter.Label(top, text="Random maze settings",font = "Helvetica 14 bold italic").grid(row=0, column = 2, columnspan=2)
-Tkinter.Label(top, text="Simulation settings",font = "Helvetica 14 bold italic").grid(row=0, column = 4, columnspan=2)
-Tkinter.Label(top, text="Q-learning settings",font = "Helvetica 14 bold italic").grid(row=0, column = 6, columnspan=2)
-Tkinter.Label(top, text="Cooperative learning settings",font = "Helvetica 14 bold italic").grid(row=0, column = 10, columnspan=2)
+Tkinter.Label(top, text="Random maze settings", font = "Helvetica 14 bold italic").grid(row=0, column = 2, columnspan=2)
+Tkinter.Label(top, text="Simulation settings", font = "Helvetica 14 bold italic").grid(row=0, column = 4, columnspan=2)
+Tkinter.Label(top, text="Q-learning settings", font = "Helvetica 14 bold italic").grid(row=0, column = 6, columnspan=4)
+Tkinter.Label(top, text="Additional Options", font = "Helvetica 14 bold italic").grid(row=0, column = 10, columnspan=2)
 
 """ Console """
 T1 = Tkinter.Text(top, height=14, width=180)
-T1.grid(row=6,column=1, columnspan=13)
+T1.grid(row=11,column=0, rowspan=5, columnspan=12)
 T1.config(state=Tkinter.DISABLED)
 
 """ Robot Builder """
+Tkinter.Label(top, text="Movement model").grid(row=1, column = 0)
 vMOV.set("North East South West") # default value
 OM1 = Tkinter.OptionMenu(top, vMOV, "North East South West", "Forward Backward Turn")
-OM1.grid(row=1,column = 0, sticky=Tkinter.EW)
+OM1.grid(row=2,column = 0, sticky=Tkinter.EW)
 OM1.config(justify=Tkinter.LEFT)
 
+Tkinter.Label(top, text="Exploration model").grid(row=3, column = 0)
 vEXP.set("Random") # default value
-OM2 = Tkinter.OptionMenu(top, vEXP, "Random", "Smart Random")
-OM2.grid(row=2,column = 0, sticky=Tkinter.EW)
+OM2 = Tkinter.OptionMenu(top, vEXP, "Random", "Smart Random", "Decreasing Exploration Rate")
+OM2.grid(row=4,column = 0, sticky=Tkinter.EW)
 OM2.config(justify=Tkinter.LEFT)
 
+Tkinter.Label(top, text="Reinforcement model").grid(row=5, column = 0)
 vQRL.set("Basic Q learning") # default value
 OM3 = Tkinter.OptionMenu(top, vQRL, "Basic Q learning", "Weighted Q learning")
-OM3.grid(row=3,column = 0, sticky=Tkinter.EW)
+OM3.grid(row=6,column = 0, sticky=Tkinter.EW)
 OM3.config(justify=Tkinter.LEFT)
 
+Tkinter.Label(top, text="Step counting rule").grid(row=7, column = 0)
 vAction.set("Do one step each round") # default value
 OM3 = Tkinter.OptionMenu(top, vAction, "Do one step each round", "Do one action each round")
-OM3.grid(row=4,column = 0, sticky=Tkinter.EW)
+OM3.grid(row=8, column = 0, sticky=Tkinter.EW)
 OM3.config(justify=Tkinter.LEFT)
 
 LB2 = Tkinter.Listbox(top, exportselection=0)
@@ -248,22 +253,17 @@ E21.config(justify=Tkinter.CENTER)
 E21.insert(3,'10')
 E21.grid(row = 1, column = 5)
 
-do_plot = Tkinter.IntVar()
-Tkinter.Label(top, text="Visualization").grid(row=2, column = 4)
-C21 = Tkinter.Checkbutton(top,variable=do_plot)
-C21.grid(row = 2, column = 5)
-
-Tkinter.Label(top, text="Iterations").grid(row=3, column = 4)
+Tkinter.Label(top, text="Iterations").grid(row=2, column = 4)
 E22 = Tkinter.Entry(top, bd =2,width = 3)
 E22.config(justify=Tkinter.CENTER)
 E22.insert(4,'50')
-E22.grid(row = 3, column = 5)
+E22.grid(row = 2, column = 5)
 
-Tkinter.Label(top, text="Max steps").grid(row=4, column = 4)
+Tkinter.Label(top, text="Max steps").grid(row=3, column = 4)
 E23 = Tkinter.Entry(top, bd =2, width = 3)
 E23.config(justify=Tkinter.CENTER)
-E23.insert(4, '-1')
-E23.grid(row=4, column=5)
+E23.insert(3, '-1')
+E23.grid(row=3, column=5)
 
 """ Q learning settings """
 
@@ -309,32 +309,43 @@ E37.config(justify=Tkinter.CENTER)
 E37.insert(3,'0')
 E37.grid(row = 3, column = 9)
 
-useQshared = Tkinter.IntVar()
-Tkinter.Label(top, text="Use shared Q matrix").grid(row=4, column = 8)
-C31 = Tkinter.Checkbutton(top,variable=useQshared)
-C31.grid(row = 4, column = 9)
-
-""" Cooperative learning settings """
-Tkinter.Label(top, text="Cooperation time").grid(row=1, column = 10)
+Tkinter.Label(top, text="Cooperation time").grid(row=4, column = 8)
 E41 = Tkinter.Entry(top, bd =2,width = 4)
 E41.config(justify=Tkinter.CENTER)
 E41.insert(3,'-1')
-E41.grid(row = 1, column = 11)
+E41.grid(row = 4, column = 9)
 
-PB1 = ttk.Progressbar(top, orient="horizontal", length=120, mode="determinate")
-PB1.grid(row=0, column=12)
+""" Additional options """
+useQshared = Tkinter.IntVar()
+Tkinter.Label(top, text="Use shared Q matrix").grid(row=1, column = 10)
+C31 = Tkinter.Checkbutton(top,variable=useQshared)
+C31.grid(row = 1, column = 11)
+
+""" Buttons """
+B2 = Tkinter.Button(top, text ="Generate maze", command = generateMaze)
+B2.grid(row=6, column=2, columnspan=2)
+B4 = Tkinter.Button(top, text ="Show maze", command = showMaze)
+B4.grid(row=6, column=1)
+
+B1 = Tkinter.Button(top, text ="Start simulation", command = startSim)
+B1.grid(row=6, column=4, columnspan=2)
+B3 = Tkinter.Button(top, text ="Restart simulation", command = restartSim)
+B3.grid(row=7, column=4, columnspan=2)
+
+B5 = Tkinter.Button(top, text ="Plot data", command = plotData)
+B5.grid(row=6, column=10, columnspan=2)
+
+B6 = Tkinter.Button(top, text ="Visualize", command = visualize)
+B6.grid(row=7, column=10, columnspan=2)
+
+B7 = Tkinter.Button(top, text ="Decision maze (only NESW model)", command = showDecisionMaze)
+B7.grid(row=8, column=10, columnspan=2)
+
+
+""" Progressbar """
+PB1 = ttk.Progressbar(top, orient="horizontal", length=1440, mode="determinate")
+PB1.grid(row=10, column=0, columnspan = 12)
 PB1["value"] = 0
 PB1["maximum"] = int(E22.get())
-
-B2 = Tkinter.Button(top, text ="Generate maze", command = generateMaze)
-B2.grid(row=1, column=12)
-B1 = Tkinter.Button(top, text ="Start simulation", command = startSim)
-B1.grid(row=2, column=12)
-B3 = Tkinter.Button(top, text ="Restart simulation", command = restartSim)
-B3.grid(row=3, column=12)
-B4 = Tkinter.Button(top, text ="Show maze", command = showMaze)
-B4.grid(row=4, column=12)
-B5 = Tkinter.Button(top, text ="Plot data", command = plotData)
-B5.grid(row=5, column=12)
 
 top.mainloop()

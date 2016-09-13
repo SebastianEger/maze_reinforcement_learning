@@ -45,7 +45,7 @@ class RobotController:
             if configuration[1] == 'Basic Q learning':
                 qrl = basicQlearning.BasicQlearning(mas)
             if configuration[1] == 'Weighted Q learning':
-                qrl = weightedqlearning.WeightedQlearning(mas, self.maze)
+                qrl = weightedqlearning.WeightedQlearning(mas)
 
             exp = None
             if configuration[2] == 'Random':
