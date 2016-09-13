@@ -11,7 +11,7 @@ class SmartRandomExploration(BaseExploration):
         action_list_2 = []
         # get actions to not visited places
         for action in range(basis.mov.nActions):
-            next_pos = basis.mas.getNextPos(basis.current_position, action)
+            next_pos = basis.mov.getNextPos(basis.current_position, action)
             if basis.traveled_map[next_pos[0], next_pos[1], 0] == 0:
                 action_list.append(action)
         numpy.random.shuffle(action_list)

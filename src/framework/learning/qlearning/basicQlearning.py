@@ -30,14 +30,6 @@ class BasicQlearning(BaseQLearning):
         actions_sorted[0:number_same_value] = actions_same_value
         return actions_sorted
 
-    def learnFromRobots(self, basis):
-        self.Qnew = numpy.zeros_like(self.Q)
-        for robot in basis.robot_list:
-            self.Qnew += self.computeWeight(robot)*robot.Q
-
-    def learnNewQ(self):
-        self.Q[:, :] = self.Qnew[:, :]
-
     def computeWeight(self, robot):
         return 1
 

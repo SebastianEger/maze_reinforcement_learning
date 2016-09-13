@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
-
+import numpy
 
 class BaseQLearning(object):
     __metaclass__ = ABCMeta
 
     mas = None
+    Q = None
+    Qnew = None
     expertness = 0
 
     def __init__(self, mas):
@@ -26,14 +28,17 @@ class BaseQLearning(object):
     def getActionList(self, state):
         pass
 
-    @abstractmethod
     def computeWeight(self, basis):
-        pass
+        return 1
 
     @abstractmethod
     def computeExpertness(self):
         pass
 
-    @abstractmethod
-    def learnFromRobots(self, basis):
-        pass
+    def learnFromRobots(self, robotList):
+        self.Qnew = numpy.zeros_like(self.Q)
+        for robot in robotList:
+            self.Qnew += self.computeWeight(robot)*robot.Q
+
+    def learnNewQ(self):
+        self.Q[:, :] = self.Qnew[:, :]

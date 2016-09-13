@@ -2,18 +2,13 @@ import Tkinter
 import math
 import ttk
 import matplotlib
-matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
-
-
 import matplotlib.pyplot as plt
 import numpy
-from mazes import dfs_maze
-from mazes import random_maze
-from mazes import staticMazes
-from src.robots import robotController
-from src.simulation import simulation
+from mazes import dfs_maze, random_maze, staticMazes
+from robots import robotController
+from simulation import simulation
+
+# matplotlib.use("TkAgg")
 
 top = Tkinter.Tk()
 top.wm_title('Simulation panel')
@@ -29,6 +24,11 @@ vEXP = Tkinter.StringVar(top)
 vQRL = Tkinter.StringVar(top)
 vAction = Tkinter.StringVar(top)
 
+def writeConsole(text):
+    T1.config(state=Tkinter.NORMAL)
+    T1.insert('1.0', text + '\n')
+    T1.config(state=Tkinter.DISABLED)
+
 def startSim():
     print 'Starting simulation!'
     PB1["value"] = 0
@@ -40,7 +40,12 @@ def startSim():
     """ Robot controller """
     global rc
     rc = robotController.RobotController(maze)
-    rc.init_robots([vMOV.get(), vQRL.get(), vEXP.get(), useQshared.get()], start_positions, goal_positions)
+    success, message = rc.init_robots([vMOV.get(), vQRL.get(), vEXP.get(), useQshared.get()], start_positions, goal_positions)
+    writeConsole(message)
+
+    if not success:
+        return False
+
     rc.q_settings(float(E31.get()), float(E32.get()), float(E33.get()), float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()))
     if vAction.get() == 'Do one action each round':
         rc.cmd('set_doOnlyOneActionPerStep', True)
@@ -60,7 +65,7 @@ def startSim():
     """ Show results """
     if data:
         T1.config(state=Tkinter.NORMAL)
-        T1.insert('1.0','Simulation finished | avg steps: %f | \n' % (math.fsum(data)/len(data)))
+        T1.insert('1.0','Simulation finished! - Sum steps: %f - Avg steps: %f \n' % (math.fsum(data), (math.fsum(data)/len(data))))
         T1.config(state=Tkinter.DISABLED)
 
 def genStartGoalPositions():

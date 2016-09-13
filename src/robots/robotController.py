@@ -35,23 +35,30 @@ class RobotController:
         number = len(start_positions)
         print configuration
         for robotID in xrange(number):
+
             mas = None
             if configuration[0] == 'North East South West':
                 mas = northeastsouthwest.NorthEastSouthWest(self.maze)
-            if configuration[0] == 'Forward Backward Turn':
+            elif configuration[0] == 'Forward Backward Turn':
                 mas = forwardbackwardturn.ForwardBackwardTurn(self.maze)
+            else:
+                return False, "This movement model doesn't exist!"
 
             qrl = None
             if configuration[1] == 'Basic Q learning':
                 qrl = basicQlearning.BasicQlearning(mas)
-            if configuration[1] == 'Weighted Q learning':
+            elif configuration[1] == 'Weighted Q learning':
                 qrl = weightedqlearning.WeightedQlearning(mas)
+            else:
+                return False, "This reinforcement model doesn't exist!"
 
             exp = None
             if configuration[2] == 'Random':
                 exp = randomexploration.RandomExploration()
-            if configuration[2] == 'Smart Random':
+            elif configuration[2] == 'Smart Random':
                 exp = smartrandomexploration.SmartRandomExploration()
+            else:
+                return False, "This exploration model doesn't exist!"
 
             modules = [mas, qrl, exp]
 
@@ -69,6 +76,11 @@ class RobotController:
 
         for robot in self.robot_list:
             robot.robot_list = self.robot_list
+
+        return True, 'Agents init successfully!: ' \
+               + configuration[0] \
+               + ' - ' + configuration[1] \
+               + ' - ' + configuration[2]
 
     def reset_robots(self):
         i = 0
@@ -100,9 +112,9 @@ class RobotController:
             set_doOneActionPerStep(value)
         if cmd == "do_coop_learning":
             for robot in self.robot_list:
-                robot.learnFromRobots()
+                robot.qrl.learnFromRobots(self.robot_list)
             for robot in self.robot_list:
-                robot.learnNewQ()
+                robot.qrl.learnNewQ()
 
     def q_settings(self, learn_rate, discount, reward_goal, reward_wall, reward_robot, reward_step, exploration_rate=0):
         for robot in self.robot_list:
