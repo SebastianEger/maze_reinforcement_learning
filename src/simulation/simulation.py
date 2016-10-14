@@ -1,13 +1,15 @@
 import time
 from random import shuffle
 from operator import add
+import Tkinter
 
 import matplotlib.pyplot as plt
 
 
 class Simulation:
-    def __init__(self, rc, maze):
-        self.robot_controller = rc
+    def __init__(self, ac, maze, console):
+        self.console = console
+        self.agent_controller = ac
         self.cooperationTime = -1
         self.do_plot = False
         self.refresh_rate = 0
@@ -17,93 +19,126 @@ class Simulation:
     def load_maze(self, maze):
         self.maze = maze
         self.maze[:, :, 1] = self.maze[:, :, 0]
-        self.robot_controller.maze = self.maze
-        self.robot_controller.reset_robots()
+        self.agent_controller.maze = self.maze
+        self.agent_controller.reset_robots()
 
-    def run(self, numberTrials=1, PB=None):
+    def run(self, n_trials=1, PB=None):
         data = []
         coop_counter = 0
-        if self.do_plot:
-            self.initPlot()
         doStop = False
-        for curTrial in xrange(numberTrials):
-            self.robot_controller.reset_robots()
-            step_counter = 0
-            while True:
-                # do actions
-                all_finished = True
-                # shuffle(self.robot_controller.robot_list)
-                for robot_it in self.robot_controller.robot_list:
-                    robot_it.sen.simSensors(robot_it.current_position, self.maze)   # simulate robot sensor
-                    oldPosition = robot_it.current_position
-                    goalReached, newPosition = robot_it.makeStep()
 
+        # check if we should plot the run
+        if self.do_plot:
+            self.init_plot()
+
+        # do n_trials runs
+        for current_trial in xrange(n_trials):
+            self.agent_controller.reset_agents()
+            step_counter = 0
+
+            # main while loop
+            while True:
+                all_finished = True
+
+                # shuffle(self.robot_controller.robot_list)
+                for agent in self.agent_controller.agent_list:
+
+                    # simulate agent sensor
+                    agent.sen.sim_sensors(agent.current_position, self.maze)
+
+                    # set current position to old position
+                    old_position = agent.current_position
+
+                    # let agent make one step/action
+                    goalReached, newPosition = agent.run()
+
+                    # check if agent has reached the goal
                     if goalReached:
                         # free goal position
                         self.maze[newPosition[0], newPosition[1], 0] = 0
                     else:
                         # traveled map
-                        self.robot_controller.traveled_map[robot_it.current_position[0], robot_it.current_position[1], 0] += 1
+                        self.agent_controller.traveled_map[agent.current_position[0], agent.current_position[1], 0] += 1
                         # free old position
-                        self.maze[oldPosition[0], oldPosition[1], 0] = 0
+                        self.maze[old_position[0], old_position[1], 0] = 0
                         # block current position
-                        self.maze[robot_it.current_position[0], robot_it.current_position[1], 0] = robot_it.info+2
+                        self.maze[agent.current_position[0], agent.current_position[1], 0] = agent.agent_id+2
                         # at least one robot has not finished
                         all_finished = False
+
                 if self.do_plot:
-                    self.showCurMaze()
+                    self.show_current_maze()
+
+                # inc step counter
                 step_counter += 1
+
+                # check if every agent has finished
                 if all_finished:
                     data.append(step_counter)
                     break
+
+                # check if we exceeded number of steps
                 if step_counter > self.max_steps > 0:
-                    print "Too many steps! Execution stopped!"
+                    self.write_console('Simulation: Too many steps, execution stopped!')
                     doStop = True
                     break
+
             coop_counter += 1
+
+            # check if we should we cooperative learning
             if coop_counter == self.cooperationTime:
-                print "Exchanging Q matrices"
-                self.robot_controller.cmd("do_coop_learning")
+                self.write_console('Simulation: Doing cooperative learning!')
+                self.agent_controller.do_coop_learning()
                 coop_counter = 0
+
+            # update progressbar
             if PB:
-                PB["value"] = curTrial+1
+                PB["value"] = current_trial+1
                 PB.update_idletasks()
+
+            # check if we should stop the run
             if doStop:
                 break
+
+        for agent in self.agent_controller.agent_list:
+            print agent.qrl.Q_mat[23,:]
+
         return data
 
-    def do_animation(self):
-        pass
-
-    def initPlot(self):
+    def init_plot(self):
         plt.ion()
         plt.figure(figsize=(10, 5))
         plt.imshow(self.maze[:, :, 0], cmap=plt.cm.binary, interpolation='nearest')
-        for robot in self.robot_controller.robot_list:
-            plt.plot(robot.current_position[0], robot.current_position[1], 'ro')
+        for agent in self.agent_controller.agent_list:
+            plt.plot(agent.current_position[0], agent.current_position[1], 'ro')
         plt.show()
         plt.pause(0.00001)
 
-    def showCurMaze(self):
+    def show_current_maze(self):
         plt.clf()
         plt.imshow(self.maze[:, :, 0], cmap=plt.cm.binary, interpolation='nearest')
-        for robot in self.robot_controller.robot_list:
+        for agent in self.agent_controller.agent_list:
             # plt.plot(robot.current_position[1], robot.current_position[0], 'ro')
-            if robot.current_position[2] == 0:
-                plt.arrow(robot.current_position[1],
-                          robot.current_position[0]+0.4,
+            if agent.current_position[2] == 0:
+                plt.arrow(agent.current_position[1],
+                          agent.current_position[0]+0.4,
                           0, -0.8, color='b', head_width=0.1, head_length=0.1)
-            if robot.current_position[2] == 1:
-                plt.arrow(robot.current_position[1]-0.4,
-                          robot.current_position[0],
+            if agent.current_position[2] == 1:
+                plt.arrow(agent.current_position[1]-0.4,
+                          agent.current_position[0],
                           +0.8, 0, color='b', head_width=0.1, head_length=0.1)
-            if robot.current_position[2] == 2:
-                plt.arrow(robot.current_position[1],
-                          robot.current_position[0]-0.4,
+            if agent.current_position[2] == 2:
+                plt.arrow(agent.current_position[1],
+                          agent.current_position[0]-0.4,
                           0, +0.8, color='b', head_width=0.1, head_length=0.1)
-            if robot.current_position[2] == 3:
-                plt.arrow(robot.current_position[1]+0.4,
-                          robot.current_position[0],
+            if agent.current_position[2] == 3:
+                plt.arrow(agent.current_position[1]+0.4,
+                          agent.current_position[0],
                           -0.8, 0, color='b', head_width=0.1, head_length=0.1)
         plt.show()
         plt.pause(0.00001)
+
+    def write_console(self, text):
+        self.console.config(state=Tkinter.NORMAL)
+        self.console.insert('1.0', text + '\n')
+        self.console.config(state=Tkinter.DISABLED)

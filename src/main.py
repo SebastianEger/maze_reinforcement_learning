@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy
 from mazes import dfs_maze, random_maze, staticMazes
-from robots import robotController
+from agentcontroller import agentController
 from simulation import simulation
 
 top = Tk()
@@ -13,12 +13,15 @@ plt.ion()
 
 maze = numpy.zeros((10,10,5))
 data = []
-rc = robotController.RobotController(maze)
-sim = simulation.Simulation(rc, maze)
+ac = None
+sim = None
 
 vMOV = StringVar(top)
 vEXP = StringVar(top)
 vQRL = StringVar(top)
+vExpertness = StringVar(top)
+vWeighting = StringVar(top)
+vExplorationRate = StringVar(top)
 vAction = StringVar(top)
 
 def writeConsole(text):
@@ -28,6 +31,27 @@ def writeConsole(text):
 
 def startSim():
     print 'Starting simulation!'
+
+    configuration = dict()
+
+    # moduls
+    configuration['mov'] = vMOV.get()
+    configuration['exp'] = vEXP.get()
+    configuration['expertness modul'] = vExpertness.get()
+    configuration['weighting modul'] = vWeighting.get()
+    configuration['exploration rate modul'] = vExplorationRate.get()
+
+    # settings
+    configuration['use shared Q'] = useQshared.get()
+    configuration['learn rate'] = float(E31.get())
+    configuration['discount'] = float(E32.get())
+    configuration['reward goal'] = float(E33.get())
+    configuration['reward wall'] = float(E34.get())
+    configuration['reward robot'] = float(E35.get())
+    configuration['reward step'] = float(E36.get())
+    configuration['exploration rate'] = float(E37.get())
+
+    # init progressbar
     PB1["value"] = 0
     PB1["maximum"] = int(E22.get())
 
@@ -35,21 +59,20 @@ def startSim():
     start_positions, goal_positions = genStartGoalPositions()
 
     """ Robot controller """
-    global rc
-    rc = robotController.RobotController(maze)
-    success, message = rc.initAgents([vMOV.get(), vQRL.get(), vEXP.get(), useQshared.get()], start_positions, goal_positions)
+    global ac
+    ac = agentController.AgentController(maze)
+    success, message = ac.init_agents(configuration, start_positions, goal_positions)
     writeConsole(message)
 
     if not success:
         return False
 
-    rc.q_settings(float(E31.get()), float(E32.get()), float(E33.get()), float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()))
     if vAction.get() == 'Do one action each round':
-        rc.cmd('set_doOnlyOneActionPerStep', True)
+        ac.cmd('set_doOnlyOneActionPerStep', True)
 
     """ Simulation """
     global sim
-    sim = simulation.Simulation(rc, maze)
+    sim = simulation.Simulation(ac, maze, T1)
     sim.cooperationTime = float(E41.get())
     sim.max_steps = float(E23.get())
     sim.do_plot = False
@@ -62,7 +85,7 @@ def startSim():
     """ Show results """
     if data:
         T1.config(state=NORMAL)
-        T1.insert('1.0','Simulation finished! - Sum steps: %f - Avg steps: %f \n' % (math.fsum(data), (math.fsum(data)/len(data))))
+        T1.insert('1.0','Simulation: Run finished! - Sum steps: %f - Avg steps: %f \n' % (math.fsum(data), (math.fsum(data)/len(data))))
         T1.config(state=DISABLED)
 
 def genStartGoalPositions():
@@ -82,15 +105,20 @@ def genStartGoalPositions():
                 start_positions.append([13,13,2])
         for i in xrange(numberRobots):
             goal_positions.append([7,7,0])
+    elif LB2.curselection() == (0,):
+        for i in xrange(numberRobots):
+            start_positions.append([1,1,2])
+        for i in xrange(numberRobots):
+            goal_positions.append([[15,16,0],[15,17,0],[15,18,0]])
     else:
         for i in xrange(numberRobots):
             start_positions.append([1,1,2])
         for i in xrange(numberRobots):
-            goal_positions.append([maze_shape[0]-2,maze_shape[1]-2,0])
+            goal_positions.append([[maze_shape[0]-2,maze_shape[1]-2,0],])
     return start_positions, goal_positions
 
 def restartSim():
-    rc.q_settings(float(E31.get()),
+    ac.q_settings(float(E31.get()),
                   float(E32.get()),
                   float(E33.get()),
                   float(E34.get()),
@@ -101,7 +129,7 @@ def restartSim():
     data = []
     PB1.update_idletasks()
     for i in xrange(int(E22.get())):
-        rc.reset_robots()
+        ac.reset_agents()
         data.append(sim.run())
         PB1["value"] = i+1
         PB1.update_idletasks()
@@ -114,11 +142,11 @@ def LB2onSelect(evt):
     index = int(w.curselection()[0])
     T1.config(state=NORMAL)
     if index == 0:
-        T1.insert('1.0', 'Loaded Static Maze 1\n')
+        T1.insert('1.0', 'Selected Static Maze 1\n')
     if index == 1:
-        T1.insert('1.0', 'Loaded Depth-first search maze | tree type, only one solution | Height and Width are doubled! \n')
+        T1.insert('1.0', 'Selected Depth-first search maze | tree type, only one solution | Height and Width are doubled! \n')
     if index == 2:
-        T1.insert('1.0', 'Loaded Unknown Random Maze Generator | random maze with more than one solution \n')
+        T1.insert('1.0', 'Selected Unknown Random Maze Generator | random maze with more than one solution \n')
     if index == 3:
         pass
     generateMaze()
@@ -126,6 +154,7 @@ def LB2onSelect(evt):
 
 def generateMaze():
     global maze
+    writeConsole("Generated new " + LB2.get(LB2.curselection()[0]))
     if LB2.curselection() == (0,):
         maze = staticMazes.get_static_maze_2()
     if LB2.curselection() == (1,):
@@ -139,6 +168,7 @@ def generateMaze():
     # showMaze()
 
 def showMaze():
+    writeConsole("Showing maze")
     global maze
     plt.figure(figsize=(10, 10))
     plt.imshow(maze[:,:,0], cmap='Greys', interpolation='nearest')
@@ -160,7 +190,7 @@ def showDecisionMaze():
     for ii in xrange(row):
         for jj in xrange(col):
             ind = jj*row + ii
-            actions_unsorted = list(rc.sharedQmatrix[ind,:])
+            actions_unsorted = list(ac.shared_Q_mat[ind, :])
             actions_sorted = [i[0] for i in sorted(enumerate(actions_unsorted), key=lambda x:x[1],reverse=True)]
             qM[ii,jj] = actions_sorted[0]
             if maze[ii,jj,0] == 1:
@@ -175,14 +205,20 @@ def showDecisionMaze():
                 plt.arrow(jj+0.4, ii, -0.8, 0, color='b', head_width=0.1, head_length=0.1)
     plt.show()
 
+
+""" ------------------------------------------------------------------ """
+""" ------------------------- Agent settings ------------------------- """
+""" ------------------------------------------------------------------ """
+# Label
 Label(top, text="Agent settings",font = "Helvetica 14 bold italic").grid(row=0, column = 0, sticky=W)
 
+# Frame
 frameAgentCreator = Frame(bd=2, relief=GROOVE)
 frameAgentCreator.grid(row=1, column=0, sticky=EW)
 
-""" Robot Builder """
+# Objects
 Label(frameAgentCreator, text="Movement model").grid(row=1, column = 0)
-vMOV.set("North East South West") # default value
+vMOV.set("North East South West")  # default value
 OM1 = OptionMenu(frameAgentCreator, vMOV, "North East South West", "Forward Backward Turn", "Forward Right Backward Left")
 OM1.grid(row=1,column = 1, sticky=EW)
 OM1.config(justify=LEFT)
@@ -193,38 +229,43 @@ OM2 = OptionMenu(frameAgentCreator, vEXP, "Random", "Smart Random", "Decreasing 
 OM2.grid(row=2,column = 1, sticky=EW)
 OM2.config(justify=LEFT)
 
-Label(frameAgentCreator, text="Reinforcement model").grid(row=1, column = 2)
-vQRL.set("Basic Q learning") # default value
-OM3 = OptionMenu(frameAgentCreator, vQRL, "Basic Q learning", "Weighted Q learning")
+Label(frameAgentCreator, text="Expertness model").grid(row=1, column = 2)
+vExpertness.set("Normal") # default value
+OM3 = OptionMenu(frameAgentCreator, vExpertness, "Normal", "Absolute")
 OM3.grid(row=1,column = 3, sticky=EW)
 OM3.config(justify=LEFT)
 
-Label(frameAgentCreator, text="Step counting rule").grid(row=2, column = 2)
-vAction.set("Do one step each round") # default value
-OM4 = OptionMenu(frameAgentCreator, vAction, "Do one step each round", "Do one action each round")
+Label(frameAgentCreator, text="Weighting model").grid(row=2, column = 2)
+vWeighting.set("Learn From All") # default value
+OM4 = OptionMenu(frameAgentCreator, vWeighting, "Learn From All")
 OM4.grid(row=2, column = 3, sticky=EW)
 OM4.config(justify=LEFT)
 
-variable1 = StringVar(top)
-Label(frameAgentCreator, text="Exploration rate rule").grid(row=1, column = 4)
-variable1.set("Constant") # default value
-OM5 = OptionMenu(frameAgentCreator, variable1, "Constant", "Decreasing over steps")
+Label(frameAgentCreator, text="Exploration rate").grid(row=1, column = 4)
+vExplorationRate.set("Constant") # default value
+OM5 = OptionMenu(frameAgentCreator, vExplorationRate, "Constant", "Decreasing over steps")
 OM5.grid(row=1, column = 5, sticky=EW)
-OM5.config(justify=LEFT)
-
 
 variable2 = StringVar(top)
-Label(frameAgentCreator, text="Goal setting").grid(row=2, column = 4)
+Label(frameAgentCreator, text="Number goals").grid(row=2, column = 4)
 variable2.set("One Goal") # default value
 OM6 = OptionMenu(frameAgentCreator, variable2, "One Goal", "Multiple Goals")
 OM6.grid(row=2, column = 5, sticky=EW)
 
 
+""" ------------------------------------------------------------------ """
+""" ---------------------- Simulation settings ----------------------- """
+""" ------------------------------------------------------------------ """
+# Label
+Label(top, text="Simulation settings",font = "Helvetica 14 bold italic").grid(row=2, column = 0, sticky=W)
+
+# Frame
 frameSettings = Frame(bd=2, relief=GROOVE)
 frameSettings.grid(row=4, column=0)
 
+# Objects
 """ Maze selection """
-Label(frameSettings, text="Maze",font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 0)
+Label(frameSettings, text="Maze",font = "Helvetica 14 bold italic", width=15).grid(row=0, column = 0)
 LB2 = Listbox(frameSettings, exportselection=0)
 LB2.grid(row=1,column = 0, rowspan = 5)
 LB2.insert(END, "Static maze 1")
@@ -234,8 +275,8 @@ LB2.insert(END, "Static maze 3")
 LB2.insert(END, "DFS special")
 LB2.bind('<<ListboxSelect>>', LB2onSelect)
 
-""" Maze settings """
-Label(frameSettings, text="Random maze settings", font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 1, columnspan=2)
+# Maze settings
+Label(frameSettings, text="Random maze settings", font = "Helvetica 14 bold italic", width=20).grid(row=0, column = 1, columnspan=2)
 
 startColumn = 1
 startRow = 1
@@ -263,13 +304,13 @@ E14.config(justify=CENTER)
 E14.insert(4,'0.75')
 E14.grid(row = startRow+3, column = startColumn+1)
 
-""" Simulation settings """
-Label(frameSettings, text="Simulation settings", font = "Helvetica 14 bold italic", width = 25).grid(row=0, column = 3, columnspan=2)
+# Simulation settings
+Label(frameSettings, text="Simulation settings", font = "Helvetica 14 bold italic", width = 20).grid(row=0, column = 3, columnspan=2)
 
 startColumn = 3
 startRow = 1
 
-Label(frameSettings, text="Number robots").grid(row=startRow, column = startColumn)
+Label(frameSettings, text="Number agentcontroller").grid(row=startRow, column = startColumn)
 E21 = Entry(frameSettings, bd =2,width = 3)
 E21.config(justify=CENTER)
 E21.insert(3,'10')
@@ -284,10 +325,10 @@ E22.grid(row = startRow+1, column = startColumn+1)
 Label(frameSettings, text="Max steps").grid(row=startRow+2, column = startColumn)
 E23 = Entry(frameSettings, bd =2, width = 3)
 E23.config(justify=CENTER)
-E23.insert(3, '-1')
+E23.insert(3, '15000')
 E23.grid(row=startRow+2, column=startColumn+1)
 
-""" Q learning settings """
+# Q learning settings
 Label(frameSettings, text="Q-learning settings", font = "Helvetica 14 bold italic", width = 50).grid(row=0, column = 5, columnspan=4)
 
 
@@ -333,7 +374,7 @@ E36.grid(row = startRow+1, column = startColumn+3)
 Label(frameSettings, text="Exploration rate").grid(row=startRow+2, column = startColumn+2)
 E37 = Entry(frameSettings, bd =2,width = 4)
 E37.config(justify=CENTER)
-E37.insert(3,'0')
+E37.insert(3,'0.2')
 E37.grid(row = startRow+2, column = startColumn+3)
 
 Label(frameSettings, text="Cooperation time").grid(row=startRow+3, column = startColumn+2)
@@ -342,7 +383,7 @@ E41.config(justify=CENTER)
 E41.insert(3,'-1')
 E41.grid(row = startRow+3, column = startColumn+3)
 
-""" Additional options """
+# Additional options
 Label(frameSettings, text="Additional Options", font = "Helvetica 14 bold italic", width=25).grid(row=0, column = 9, columnspan=2)
 
 useQshared = IntVar()
@@ -350,7 +391,7 @@ Label(frameSettings, text="Use shared Q matrix").grid(row=1, column = 9)
 C31 = Checkbutton(frameSettings,variable=useQshared)
 C31.grid(row = 1, column = 10)
 
-""" Buttons """
+# Buttons
 startColumn = 0
 startRow = 9
 
@@ -374,7 +415,7 @@ B6.grid(row=startRow+1, column=startColumn+9, columnspan=2)
 B7 = Button(frameSettings, text ="Decision maze (only NESW model)", command = showDecisionMaze)
 B7.grid(row=startRow+2, column=startColumn+9, columnspan=2)
 
-
+""" ---------------------------------------------------------------- """
 
 """ Progressbar """
 PB1 = ttk.Progressbar(top, orient="horizontal", mode="determinate")

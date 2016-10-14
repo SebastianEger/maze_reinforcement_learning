@@ -1,1 +1,3 @@
-print 101 % 100
+A = [[0,1,0],]
+if [0,1,0] in A:
+    print 'test'

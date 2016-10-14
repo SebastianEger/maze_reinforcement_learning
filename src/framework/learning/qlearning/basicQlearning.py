@@ -1,13 +1,13 @@
 import numpy
 
-from src.framework.learning.baseQLearning import BaseQLearning
+from src.framework.learning.qlearning import BaseQLearning
 
 
 class BasicQlearning(BaseQLearning):
     def __init__(self, mas):
         BaseQLearning.__init__(self, mas)
         self.Q = numpy.zeros((mas.nStates, mas.nActions), dtype=numpy.float)  # orientation x row x col
-        self.Qnew = numpy.zeros_like(self.Q)
+        self.Qnew = self.genQmatrix()
 
         self.lastReward = 0
         self.expertness = 0

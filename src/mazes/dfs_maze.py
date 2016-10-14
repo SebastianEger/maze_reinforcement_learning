@@ -1,7 +1,6 @@
 import random
 import numpy as np
 from itertools import chain
-import matplotlib.pyplot as plt
 
 
 def generate_maze(num_rows = 10, num_cols=10, convert = True):
