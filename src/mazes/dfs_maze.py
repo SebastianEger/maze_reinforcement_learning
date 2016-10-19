@@ -85,6 +85,9 @@ def generate_maze(num_rows = 10, num_cols=10, convert = True):
         Mbin[:,:,1] = 0
         Mbin[:,:,2] = 0
         Mbin[:,:,3] = 0
+        # start and goal
+        Mbin[1, 1, 1] = 1
+        Mbin[-2, -2, 2] = 1
         return Mbin
     else:
         return M
@@ -125,6 +128,9 @@ def generate_maze_special(num_rows = 10, num_cols=10):
         if maze[y][x][0] == 1:
             maze[y][x][0] = 0
             i += 1
+    # start and goal
+    maze[1, 1, 1] = 1
+    maze[-2, -2, 2] = 1
     return maze
 
 

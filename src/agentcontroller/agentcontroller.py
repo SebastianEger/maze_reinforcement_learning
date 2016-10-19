@@ -1,4 +1,4 @@
-import numpy
+import numpy, Tkinter
 
 from src.framework.agent import Agent
 
@@ -11,7 +11,8 @@ from src.framework.qlearning import QLearning
 
 class AgentController:
 
-    def __init__(self, maze):
+    def __init__(self, maze, console):
+        self.console = console
         self.maze = maze
         self.q_matrix_size = numpy.shape(maze)
 
@@ -51,15 +52,21 @@ class AgentController:
             else:
                 return False, "AgentController: Couldn't find this movement modul!"
 
-            if configuration['expertness modul'] == 'Normal':
+            if configuration['expertness'] == 'Normal':
                 expertness_modul = expertnessmodules.Normal()
-            elif configuration['expertness modul'] == 'Absolute':
+            elif configuration['expertness'] == 'Absolute':
                 expertness_modul = expertnessmodules.Absolute()
+            elif configuration['expertness'] == 'Positive':
+                expertness_modul = expertnessmodules.Positive()
+            elif configuration['expertness'] == 'Distance To Goal':
+                expertness_modul = expertnessmodules.DistToGoal()
             else:
                 return False, "AgentController: Couldn't find this expertness modul!"
 
-            if configuration['weighting modul'] == 'Learn From All':
+            if configuration['weighting'] == 'Learn From All':
                 weighting_modul = weightingmodules.LearnFromAll()
+            elif configuration['weighting'] == 'Learn From All Positive':
+                weighting_modul = weightingmodules.LearnFromAllPositive()
             else:
                 return False, "AgentController: Couldn't find this weighting modul!"
 
@@ -75,7 +82,7 @@ class AgentController:
 
             new_agent.init_modules(mov, qrl, exp)
 
-            if configuration['use shared Q']:
+            if configuration['use_shared_Q']:
                 if self.shared_Q_mat is None:
                     # create shared Q matrix
                     print 'AgentController: Generated shared Q matrix!'
@@ -87,17 +94,18 @@ class AgentController:
         # load configuration
         for agent in self.agent_list:
             agent.agent_list = self.agent_list
-            agent.qrl.learn_rate = configuration['learn rate']
+            agent.action_selection = configuration['action_selection']
+            agent.qrl.learn_rate = configuration['learn_rate']
             agent.qrl.discount = configuration['discount']
-            agent.qrl.reward_wall = configuration['reward wall']
-            agent.qrl.reward_step = configuration['reward step']
-            agent.qrl.reward_robot = configuration['reward robot']
-            agent.qrl.reward_goal = configuration['reward goal']
-            agent.exp.exploration_rate = configuration['exploration rate']
+            agent.qrl.reward_wall = configuration['reward_wall']
+            agent.qrl.reward_step = configuration['reward_step']
+            agent.qrl.reward_robot = configuration['reward_robot']
+            agent.qrl.reward_goal = configuration['reward_goal']
+            agent.exp.exploration_rate = configuration['exploration_rate']
+            agent.exp.exploration_type = configuration['exploration_type']
 
         return True, 'AgentController: All agents were successfully initiated! Configuration: ' \
-               + configuration['mov'] \
-               + ' - ' + configuration['exp']
+               + str(configuration)
 
     def reset_agents(self):
         i = 0
@@ -106,11 +114,19 @@ class AgentController:
             i += 1
 
     def do_coop_learning(self):
+        expertness_list = []
         for agent in self.agent_list:
             agent.qrl.create_Q_mat_new(self.agent_list)
         for agent in self.agent_list:
+            expertness_list.append(round(agent.qrl.expertness,3))
             agent.qrl.learn_Q_mat_new()
 
+        self.write_console('AgentController: Expertness of each agent: ' + str(expertness_list))
+
+    def write_console(self, text):
+        self.console.config(state=Tkinter.NORMAL)
+        self.console.insert('1.0', text + '\n')
+        self.console.config(state=Tkinter.DISABLED)
 
     def cmd(self, cmd, value=None):
         def set_exploration_mode(mode):

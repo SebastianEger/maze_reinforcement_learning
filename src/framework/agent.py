@@ -11,6 +11,8 @@ class Agent:
     goal_position = None
     start_position = None
 
+    action_selection = 'Greedy'
+
     def __init__(self, agent_id, maze_size):
         self.agent_id = agent_id
 
@@ -46,7 +48,7 @@ class Agent:
 
         self.add_current_position_to_history()
 
-        action_list = self.qrl.get_action_list(self.mov.get_state(self.current_position))  # get action list from Q matrix
+        action_list = self.qrl.get_action_list(self.mov.get_state(self.current_position), 0.5, self.action_selection)  # get action list from Q matrix
 
         # override action_list if we do exploration
         if self.do_exploration():
@@ -75,7 +77,7 @@ class Agent:
         reward = self.qrl.reward_step
 
         # check if goal position
-        if next_position[0] == self.goal_position[0] and next_position[1] == self.goal_position[1]:  # check if target is goal
+        if [next_position[0], next_position[1]] in self.goal_position:  # check if target is goal
             reward = self.qrl.reward_goal
 
         # update Q matrix
@@ -108,7 +110,7 @@ class Agent:
         self.qrl.expertness = self.qrl.expertness_modul.update_expertness(self)
 
     def goal_reached(self):  # function to determine if goal is reached
-        if [self.current_position[0], self.current_position[1], 0] in self.goal_position:
+        if [self.current_position[0], self.current_position[1]] in self.goal_position:
             return True
         return False
 
@@ -117,7 +119,7 @@ class Agent:
         self.history.append([self.current_position[0], self.current_position[1]])  # add old position to history
 
     def do_exploration(self):
-        if numpy.random.random_sample(1) < self.exp.get_exploration_rate():
+        if numpy.random.random_sample(1) < self.exp.get_exploration_rate(self.trial_counter):
             return True
         else:
             return False

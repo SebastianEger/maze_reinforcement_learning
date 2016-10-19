@@ -8,7 +8,7 @@ import numpy
 from src.mazes import dfs_maze
 from src.mazes import random_maze
 from src.mazes import staticMazes
-from src.agentcontroller import agentController
+from src.agentcontroller import agentcontroller
 from src.simulation import simulation
 
 top = Tkinter.Tk()
@@ -17,7 +17,7 @@ plt.ion()
 
 maze = numpy.zeros((10,10,5))
 data = []
-rc = agentController.AgentController(maze)
+rc = agentcontroller.AgentController(maze)
 sim = simulation.Simulation(rc, maze)
 
 
@@ -32,7 +32,7 @@ def startSim():
     """ Robot controller """
     global rc
     robot_name = LB1.get(LB1.curselection()[0], LB1.curselection()[0])
-    rc = agentController.AgentController(maze)
+    rc = agentcontroller.AgentController(maze)
     rc.initAgents(robot_name[0], start_positions, goal_positions)
     rc.q_settings(float(E31.get()), float(E32.get()), float(E33.get()), float(E34.get()),float(E35.get()),float(E36.get()),float(E37.get()))
 

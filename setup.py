@@ -12,7 +12,7 @@ with open('LICENSE') as f:
 setup(
     name='src',
     version='0.0.1',
-    description='Sample package for Python-Guide.org',
+    description='Q learning in maze environment',
     long_description=readme,
     author='Kenneth Reitz',
     author_email='me@kennethreitz.com',

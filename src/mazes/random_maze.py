@@ -34,6 +34,11 @@ def maze(width=81, height=51, complexity=.75, density=.75):
     Z[:,:,2] = 0
     Z[:,:,3] = 0
     Z[:,:,4] = 0
+    # start
+    Z[1, 1, 1] = 1
+
+    # goal
+    Z[-2,-2, 2] = 1
     return Z
 
 if __name__ == '__main__':

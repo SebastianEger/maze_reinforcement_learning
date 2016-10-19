@@ -11,9 +11,6 @@ class Random(Exploration):
         numpy.random.shuffle(action_list)
         return action_list
 
-    def get_exploration_rate(self):
-        return self.exploration_rate
-
 
 class SmartRandom(Exploration):
     def get_action_list(self):
@@ -34,6 +31,3 @@ class SmartRandom(Exploration):
         numpy.random.shuffle(new_action_list_2)
         new_action_list.extend(new_action_list_2)
         return new_action_list
-
-    def get_exploration_rate(self):
-        return self.exploration_rate

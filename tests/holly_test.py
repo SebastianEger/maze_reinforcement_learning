@@ -1,8 +1,8 @@
-import src.agentcontroller.agentController
+import src.agentcontroller.agentcontroller
 from src.mazes import random_maze
 
 maze = random_maze.maze(10,10)
-rc = src.agentcontroller.agentController.AgentController(1, maze, "Holly")
+rc = src.agentcontroller.agentcontroller.AgentController(1, maze, "Holly")
 sim = src.simulation.Simulation(rc, maze)
 sim.do_plot = False
 

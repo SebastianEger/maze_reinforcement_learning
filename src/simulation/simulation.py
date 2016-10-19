@@ -1,14 +1,12 @@
-import time
-from random import shuffle
-from operator import add
 import Tkinter
 
 import matplotlib.pyplot as plt
 
 
 class Simulation:
-    def __init__(self, ac, maze, console):
-        self.console = console
+    console = None
+
+    def __init__(self, ac, maze):
         self.agent_controller = ac
         self.cooperationTime = -1
         self.do_plot = False
@@ -75,11 +73,14 @@ class Simulation:
                 # check if every agent has finished
                 if all_finished:
                     data.append(step_counter)
+                    self.write_console('Simulation: Trial [' + str(current_trial+1) + '] finished!')
                     break
 
                 # check if we exceeded number of steps
                 if step_counter > self.max_steps > 0:
-                    self.write_console('Simulation: Too many steps, execution stopped!')
+                    self.write_console('Simulation: Reached step limit, stopping execution!')
+                    for agent in self.agent_controller.agent_list:
+                        self.maze[agent.current_position[0], agent.current_position[1], 0] = 0
                     doStop = True
                     break
 
@@ -87,7 +88,7 @@ class Simulation:
 
             # check if we should we cooperative learning
             if coop_counter == self.cooperationTime:
-                self.write_console('Simulation: Doing cooperative learning!')
+                self.write_console('Simulation: Exchanging Q matrices!')
                 self.agent_controller.do_coop_learning()
                 coop_counter = 0
 
@@ -100,8 +101,8 @@ class Simulation:
             if doStop:
                 break
 
-        for agent in self.agent_controller.agent_list:
-            print agent.qrl.Q_mat[23,:]
+        # for agent in self.agent_controller.agent_list:
+        #    print agent.qrl.Q_mat[23,:]
 
         return data
 
