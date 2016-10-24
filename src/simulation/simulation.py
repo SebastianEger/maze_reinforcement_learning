@@ -37,44 +37,71 @@ class Simulation:
             # main while loop
             while True:
                 all_finished = True
+                one_finished = False
 
                 # shuffle(self.robot_controller.robot_list)
                 for agent in self.agent_controller.agent_list:
 
-                    # simulate agent sensor
-                    agent.sen.sim_sensors(agent.current_position, self.maze)
+                    for it in xrange(agent.info['agent_speed']):
 
-                    # set current position to old position
-                    old_position = agent.current_position
+                        # simulate agent sensor
+                        agent.sen.sim_sensors(agent.current_position, self.maze)
 
-                    # let agent make one step/action
-                    goalReached, newPosition = agent.run()
+                        # set current position to old position
+                        old_position = agent.current_position
 
-                    # check if agent has reached the goal
-                    if goalReached:
-                        # free goal position
-                        self.maze[newPosition[0], newPosition[1], 0] = 0
-                    else:
-                        # traveled map
-                        self.agent_controller.traveled_map[agent.current_position[0], agent.current_position[1], 0] += 1
-                        # free old position
-                        self.maze[old_position[0], old_position[1], 0] = 0
-                        # block current position
-                        self.maze[agent.current_position[0], agent.current_position[1], 0] = agent.agent_id+2
-                        # at least one robot has not finished
-                        all_finished = False
+                        # agent makes one step/action
+                        goal_reached, new_position = agent.run()
+
+                        # check if agent has reached the goal
+                        if goal_reached:
+                            # free goal position
+                            self.maze[new_position[0], new_position[1], 0] = 0 # is this necessary?
+                            one_finished = True
+                            break
+                        else:
+                            # traveled map
+                            self.agent_controller.traveled_map[agent.current_position[0], agent.current_position[1], 0] += 1
+
+                            # free old position
+                            self.maze[old_position[0], old_position[1], 0] = 0
+
+                            # block current position
+                            self.maze[agent.current_position[0], agent.current_position[1], 0] = agent.info['id']+2
+
+                            # at least one robot has not finished
+                            all_finished = False
+
+                    agent.expertness_history.append(agent.qrl.expertness)
 
                 if self.do_plot:
                     self.show_current_maze()
 
-                # inc step counter
-                step_counter += 1
-
                 # check if every agent has finished
-                if all_finished:
+                if one_finished:
+                    for agent in self.agent_controller.agent_list:
+                        self.maze[agent.current_position[0], agent.current_position[1], 0] = 0
+
                     data.append(step_counter)
                     self.write_console('Simulation: Trial [' + str(current_trial+1) + '] finished!')
                     break
+
+                elif all_finished:
+                    data.append(step_counter)
+                    self.write_console('Simulation: Trial [' + str(current_trial+1) + '] finished!')
+                    break
+
+                # inc step counter
+                step_counter += 1
+
+                # coop learning in trial
+                coop_counter += 1
+                # check if we should we cooperative learning
+                if coop_counter == self.cooperationTime:
+                    # self.write_console('Simulation: Exchanging Q matrices!')
+                    self.agent_controller.do_coop_learning(show_expertness=False)
+                    coop_counter = 0
+
 
                 # check if we exceeded number of steps
                 if step_counter > self.max_steps > 0:
@@ -84,13 +111,14 @@ class Simulation:
                     doStop = True
                     break
 
+            '''
             coop_counter += 1
-
             # check if we should we cooperative learning
             if coop_counter == self.cooperationTime:
                 self.write_console('Simulation: Exchanging Q matrices!')
                 self.agent_controller.do_coop_learning()
                 coop_counter = 0
+            '''
 
             # update progressbar
             if PB:

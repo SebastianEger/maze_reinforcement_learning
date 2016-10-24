@@ -13,7 +13,7 @@ class Exploration(AgentModul):
         pass
 
     def get_exploration_rate(self, current_trial):
-        if self.exploration_rate == 'Constant':
+        if self.exploration_type == 'Constant':
             return self.exploration_rate
         elif self.exploration_type == '1/(trial+1)':
             return float(self.exploration_rate)/(float(current_trial) + 1)

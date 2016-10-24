@@ -6,7 +6,10 @@ class Absolute(Expertness):
         pass
 
     def update_expertness(self, agent):
-        return agent.qrl.expertness + abs(agent.qrl.last_reward)
+        if agent.qrl.last_reward > agent.qrl.reward_wall:
+            return agent.qrl.expertness + abs(agent.qrl.last_reward)
+        else:
+            return agent.qrl.expertness
 
 
 class Normal(Expertness):
@@ -14,7 +17,10 @@ class Normal(Expertness):
         pass
 
     def update_expertness(self, agent):
-        return agent.qrl.expertness + agent.qrl.last_reward
+        if agent.qrl.last_reward > agent.qrl.reward_wall:
+            return agent.qrl.expertness + agent.qrl.last_reward
+        else:
+            return agent.qrl.expertness
 
 
 class Positive(Expertness):
@@ -40,3 +46,11 @@ class DistToGoal(Expertness):
         dy = abs(agent.current_position[1] - agent.goal_position[0][1])
 
         return dx+dy
+
+
+class NeededSteps(Expertness):
+    def __init__(self):
+        pass
+
+    def update_expertness(self, agent):
+        return 1000/float(agent.step_counter)

@@ -152,7 +152,7 @@ class SimSettings:
 
         B1 = Button(frameSettings, text ="Start simulation", command = functions.startSim)
         B1.grid(row=startRow, column=startColumn+3, columnspan=2)
-        B3 = Button(frameSettings, text ="Restart simulation", command = functions.restartSim)
+        B3 = Button(frameSettings, text ="Restart simulation", command = functions.restart_simulation)
         B3.grid(row=startRow+1, column=startColumn+3, columnspan=2)
 
         B5 = Button(frameSettings, text ="Plot data", command = functions.plotData)

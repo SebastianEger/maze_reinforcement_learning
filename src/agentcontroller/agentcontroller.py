@@ -42,7 +42,7 @@ class AgentController:
             new_agent.current_position = start_positions[agent_id]
             new_agent.goal_position = goal_positions[agent_id]
 
-            mov = None
+            # movement modul
             if configuration['mov'] == 'North East South West':
                 mov = northeastsouthwest.NorthEastSouthWest(self.maze_shape)
             elif configuration['mov'] == 'Forward Backward Turn':
@@ -52,6 +52,7 @@ class AgentController:
             else:
                 return False, "AgentController: Couldn't find this movement modul!"
 
+            # expertness
             if configuration['expertness'] == 'Normal':
                 expertness_modul = expertnessmodules.Normal()
             elif configuration['expertness'] == 'Absolute':
@@ -60,9 +61,12 @@ class AgentController:
                 expertness_modul = expertnessmodules.Positive()
             elif configuration['expertness'] == 'Distance To Goal':
                 expertness_modul = expertnessmodules.DistToGoal()
+            elif configuration['expertness'] == 'Needed Steps':
+                expertness_modul = expertnessmodules.NeededSteps()
             else:
                 return False, "AgentController: Couldn't find this expertness modul!"
 
+            # weighting
             if configuration['weighting'] == 'Learn From All':
                 weighting_modul = weightingmodules.LearnFromAll()
             elif configuration['weighting'] == 'Learn From All Positive':
@@ -70,9 +74,10 @@ class AgentController:
             else:
                 return False, "AgentController: Couldn't find this weighting modul!"
 
+            # Q reinforcement learning modul
             qrl = QLearning(expertness_modul, weighting_modul)
 
-            exp = None
+            # exploration modul
             if configuration['exp'] == 'Random':
                 exp = explorationmodules.Random()
             elif configuration['exp'] == 'Smart Random':
@@ -80,15 +85,33 @@ class AgentController:
             else:
                 return False, "AgentController: Couldn't find this exploration modul!"
 
+            # init modules
             new_agent.init_modules(mov, qrl, exp)
 
+            # set use shared Q option
             if configuration['use_shared_Q']:
                 if self.shared_Q_mat is None:
                     # create shared Q matrix
-                    print 'AgentController: Generated shared Q matrix!'
                     self.shared_Q_mat = new_agent.qrl.zero_Q_mat()
                 new_agent.qrl.Q_mat = self.shared_Q_mat
 
+            # set agent speed
+            if configuration['agent_speed'] == 'All Equal':
+                new_agent.info['agent_speed'] = 1
+            elif configuration['agent_speed'] == '2 different speeds':
+                if float(agent_id)/float(n_agents) < 0.5:
+                    new_agent.info['agent_speed'] = 1
+                else:
+                    new_agent.info['agent_speed'] = 2
+            elif configuration['agent_speed'] == '3 different speeds':
+                if float(agent_id)/float(n_agents) < 0.33:
+                    new_agent.info['agent_speed'] = 1
+                elif float(agent_id)/float(n_agents) < 0.66:
+                    new_agent.info['agent_speed'] = 2
+                elif float(agent_id)/float(n_agents):
+                    new_agent.info['agent_speed'] = 3
+
+            # add new agent to agent list
             self.agent_list.append(new_agent)
 
         # load configuration
@@ -99,10 +122,11 @@ class AgentController:
             agent.qrl.discount = configuration['discount']
             agent.qrl.reward_wall = configuration['reward_wall']
             agent.qrl.reward_step = configuration['reward_step']
-            agent.qrl.reward_robot = configuration['reward_robot']
+            # agent.qrl.reward_robot = configuration['reward_robot']
             agent.qrl.reward_goal = configuration['reward_goal']
             agent.exp.exploration_rate = configuration['exploration_rate']
             agent.exp.exploration_type = configuration['exploration_type']
+            agent.tau = configuration['tau']
 
         return True, 'AgentController: All agents were successfully initiated! Configuration: ' \
                + str(configuration)
@@ -113,7 +137,7 @@ class AgentController:
             agent.reset(self.start_positions[i], self.goal_positions[i])
             i += 1
 
-    def do_coop_learning(self):
+    def do_coop_learning(self, show_expertness):
         expertness_list = []
         for agent in self.agent_list:
             agent.qrl.create_Q_mat_new(self.agent_list)
@@ -121,7 +145,8 @@ class AgentController:
             expertness_list.append(round(agent.qrl.expertness,3))
             agent.qrl.learn_Q_mat_new()
 
-        self.write_console('AgentController: Expertness of each agent: ' + str(expertness_list))
+        if show_expertness:
+            self.write_console('AgentController: Expertness of each agent: ' + str(expertness_list))
 
     def write_console(self, text):
         self.console.config(state=Tkinter.NORMAL)

@@ -25,7 +25,7 @@ class QLearning(AgentModul):
         self.reward_wall = -10
         self.reward_step = -0.01
         self.reward_goal = 100
-        self.reward_robot = -0.01
+        # self.reward_robot = -0.01
 
         self.last_reward = None
 
@@ -56,7 +56,7 @@ class QLearning(AgentModul):
                 cdf.append(cdf[-1] + P[i])
 
             random_ind = bisect(cdf,random())
-            return [random_ind,]
+            return [random_ind, ]
         elif action_selection == 'Greedy':
             actions_sorted = [i[0] for i in sorted(enumerate(action_values), key=lambda x:x[1], reverse=True)]
 

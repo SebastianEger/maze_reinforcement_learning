@@ -1,25 +1,29 @@
 import numpy
 from src.framework.sensor import Sensor
 
+
 class Agent:
     mov = None  # Movement module
     qrl = None  # Q Reinforcement Learning module
     exp = None  # Exploration module
     sen = None  # Sensor module
 
-    current_position = None
-    goal_position = None
-    start_position = None
-
+    # variable how to select next action
     action_selection = 'Greedy'
 
     def __init__(self, agent_id, maze_size):
-        self.agent_id = agent_id
+        # dict which stores information about the agent
+        self.info = dict()
+        self.info['id'] = agent_id
+        self.tau = 0.1
 
         self.step_counter = 0
         self.trial_counter = 0
 
+        # some interesting data variables
         self.history = []
+        self.expertness_history = []
+        self.steps_per_trial = []
         self.agent_list = []    # list of all agentcontroller
 
         # init traveled map
@@ -28,6 +32,11 @@ class Agent:
         self.traveled_map[:,-1,0] = 1
         self.traveled_map[0,:,0] = 1
         self.traveled_map[-1,:,0] = 1
+
+        # position variables
+        self.current_position = None
+        self.goal_position = None
+        self.start_position = None
 
         self.one_action_per_step = False
 
@@ -42,13 +51,14 @@ class Agent:
         self.exp.init_agent_modules(self)
 
     def run(self):
-        self.step_counter += 1
         if self.goal_reached():  # check if we reached the goal
             return True, self.current_position  # return True because current position is goal position
 
+        self.step_counter += 1
+
         self.add_current_position_to_history()
 
-        action_list = self.qrl.get_action_list(self.mov.get_state(self.current_position), 0.5, self.action_selection)  # get action list from Q matrix
+        action_list = self.qrl.get_action_list(self.mov.get_state(self.current_position), self.tau, self.action_selection)  # get action list from Q matrix
 
         # override action_list if we do exploration
         if self.do_exploration():
@@ -62,13 +72,18 @@ class Agent:
             # check if we can move to next position
             if self.mov.check_action(self.current_position, action, next_position, self.sen):  # check action if no obstacle is in the way
                 self.move(action, next_position)  # move to new location and get reward
-                self.step_counter += 1
                 break  # do not check any further actions in action_list
             else:
                 self.stay(action, next_position)  # stay and get reward
-                if self.one_action_per_step:
-                    self.step_counter += 1
-                    break
+                break
+                #if self.one_action_per_step:
+                #    self.step_counter += 1
+                #    break
+
+        # self.expertness_history.append(self.qrl.expertness)
+
+        if self.goal_reached():
+            self.steps_per_trial.append(self.step_counter)
 
         return False, self.current_position
 
@@ -98,7 +113,8 @@ class Agent:
 
         # check if robot at next position
         if self.robot_at_position(next_position):
-            reward = self.qrl.reward_robot
+            return 0
+            # reward = self.qrl.reward_robot
 
         # update Q matrix
         self.qrl.update_Q_mat(action,
@@ -142,3 +158,4 @@ class Agent:
         self.traveled_map[:, -1, 0] = 1
         self.traveled_map[0, :, 0] = 1
         self.traveled_map[-1, :, 0] = 1
+        self.qrl.expertness = 0 # reset expertness after each trial?
