@@ -11,6 +11,7 @@ from operator import add
 class GUI:
     maze = None
     data = None
+    avg_steps = None
     agent_controller = None
     simulation = None
     configuration = None
@@ -51,6 +52,25 @@ class GUI:
         self.button_save_data = Button(frame_save_data, text ="Save data", command=self.save_data)
         self.button_save_data.grid(row=0, column=1)
 
+        self.entry_row = Entry(frame_save_data, bd=2,width=5)
+        self.entry_row.config(justify=CENTER, width=10)
+        self.entry_row.insert(3,'0')
+        self.entry_row.grid(row = 0, column = 2)
+
+        self.entry_col = Entry(frame_save_data, bd=2,width=5)
+        self.entry_col.config(justify=CENTER, width=10)
+        self.entry_col.insert(3,'0')
+        self.entry_col.grid(row = 0, column = 3)
+
+        self.entry_agent = Entry(frame_save_data, bd=2,width=5)
+        self.entry_agent.config(justify=CENTER, width=10)
+        self.entry_agent.insert(3,'1')
+        self.entry_agent.grid(row = 0, column = 4)
+
+        self.button_show_q_entry = Button(frame_save_data, text ="Show", command=self.show_q_entry)
+        self.button_show_q_entry.grid(row=0, column=5)
+
+
         # init maze
         self.generate_new_maze()
 
@@ -69,15 +89,29 @@ class GUI:
             plt.text(start_positions[1][start]-0.1, start_positions[0][start]+0.2, 'S', fontsize=15)
         plt.show()
 
+    def show_q_entry(self):
+        agent = self.agent_controller.agent_list[int(self.entry_agent.get())-1]
+        rows = agent.maze_shape[0]
+
+        output = ''
+        for i in range(4):
+            output += '[' + str(agent.qrl.Q_mat[int(self.entry_col.get())*rows + int(self.entry_row.get()), i]) + '] '
+
+        self.write_console(output)
+
     def generate_new_maze(self):
         maze_name = self.simulation_settings.LB2.get(self.simulation_settings.LB2.curselection()[0])
         self.write_console("MazeGenerator: Generated new [" + maze_name + ']')
         if maze_name == 'Static maze 1':
+            self.maze = staticMazes.get_static_maze_1()
+        if maze_name == 'Static maze 2':
             self.maze = staticMazes.get_static_maze_2()
         if maze_name == 'Static maze 3':
             self.maze = staticMazes.get_static_maze_3()
         if maze_name == 'Static maze 4':
             self.maze = staticMazes.get_static_maze_4()
+        if maze_name == 'Small Test Maze':
+            self.maze = staticMazes.get_small_test_maze(int(self.simulation_settings.E12.get()), int(self.simulation_settings.E11.get()))
         if maze_name == 'URMG':
             self.maze = random_maze.maze(int(self.simulation_settings.E12.get()),
                                          int(self.simulation_settings.E11.get()),
@@ -91,15 +125,17 @@ class GUI:
                                                        int(self.simulation_settings.E12.get()))
 
     def start_simulation(self):
-        configuration = dict()
+        self.configuration = dict()
 
-        self.agent_settings.get_configuration(configuration)
-        self.simulation_settings.get_configuration(configuration)
+        self.agent_settings.get_configuration(self.configuration)
+        self.simulation_settings.get_configuration(self.configuration)
 
         # save current configuration
-        output = open('data.pkl', 'wb')
-        pickle.dump(configuration, output)
+        output = open('configuration.pkl', 'wb')
+        pickle.dump(self.configuration, output)
         output.close()
+
+        configuration = self.configuration
 
         # init progressbar
         self.PB1["value"] = 0
@@ -117,8 +153,6 @@ class GUI:
         """ Simulation """
         self.simulation = Simulation(self.agent_controller, self.maze)
         self.simulation.console = self.console
-        self.simulation.cooperationTime = configuration['cooperation_time']
-        self.simulation.max_steps = configuration['max_steps']
         self.simulation.do_plot = False
         self.PB1.update_idletasks()  # ? do I need this ?
 
@@ -129,16 +163,21 @@ class GUI:
         self.PB2["maximum"] = configuration['repetitions']
         for current_run in xrange(configuration['repetitions']):
             success, message = self.agent_controller.init_agents(configuration, start_positions, goal_positions)
+
+            # check if agents are initiated
             if not success:
                 return False
             self.write_console(message)
 
+            # init data
             if self.data is None:
-                print self.data
-                self.data = self.simulation.run(int(configuration['iterations']), self.PB1)
-            else:
-                sim_result = self.simulation.run(int(configuration['iterations']), self.PB1)
+                self.data, self.avg_steps = self.simulation.run(configuration, self.PB1)
+            else: # add result to data list
+                sim_result, avg_steps = self.simulation.run(configuration, self.PB1)
                 self.data[:] = map(add, self.data, sim_result)
+                self.avg_steps[:] = map(add, self.avg_steps, avg_steps)
+
+            # update progressbar
             self.PB2["value"] += 1
             self.PB2.update_idletasks()
 
@@ -149,16 +188,18 @@ class GUI:
             self.write_console('Simulation: Run finished! - Sum steps: %f - Avg steps: %f - Result: %f' % (math.fsum(self.data),
                                                                                                              (math.fsum(self.data)/len(self.data)),
                                                                                                              self.data[-1]))
+        else:
+            self.write_console('Simulation: Run stopped!')
 
     def restart_simulation(self):
         pass
 
-    def plotData(self):
+    def plot_data(self):
+        # plt.plot(self.avg_steps)
         plt.plot(self.data)
 
     def visualize(self):
-        self.simulation.do_plot = True
-        self.simulation.run(1)
+        self.simulation.show_run(self.configuration)
         plt.clf()
 
     def showDecisionMaze(self):
@@ -211,24 +252,30 @@ class GUI:
         self.console.config(state=DISABLED)
 
     def save_data(self):
-        output_1 = open('data/' + self.entry_file_name.get() + '.txt', 'wb')
-        output_2 = open('data/' + self.entry_file_name.get() + '_info' + '.txt', 'wb')
-        print self.data
+        output_1 = open('data/' + self.entry_file_name.get() + '_steps.txt', 'wb')
+        output_2 = open('data/' + self.entry_file_name.get() + '_info.txt', 'wb')
+        output_3 = open('data/' + self.entry_file_name.get() + '_avg_steps.txt', 'wb')
+        # print self.data
         output_data = [str(i) for i in self.data]
         output_1.write(' '.join(output_data))
         output_2.write(str(self.configuration))
         output_1.close()
         output_2.close()
+        output_data = [str(i) for i in self.avg_steps]
+        output_3.write(' '.join(output_data))
+        output_3.close()
+
+        # write data for each agent
         for agent in self.agent_controller.agent_list:
-            file_name_3 = 'data/' + self.entry_file_name.get() + '_agent' + str(agent.info['id']) + '_expertness.txt'
+            file_name_3 = 'data/' + self.entry_file_name.get() + '_a' + str(agent.info['id']) + '_expertness.txt'
             output_3 = open(file_name_3, 'wb')
             output_data = [str(i) for i in agent.expertness_history]
             output_3.write(' '.join(output_data))
             output_3.close()
 
-            file_name_4 = 'data/' + self.entry_file_name.get() + '_agent' + str(agent.info['id']) + '_steps.txt'
+            file_name_4 = 'data/' + self.entry_file_name.get() + '_a' + str(agent.info['id']) + '_steps.txt'
             output_4 = open(file_name_4, 'wb')
-            print agent.steps_per_trial
+            # print agent.steps_per_trial
             output_data = [str(i) for i in agent.steps_per_trial]
             output_4.write(' '.join(output_data))
             output_4.close()

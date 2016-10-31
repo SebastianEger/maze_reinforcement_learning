@@ -38,7 +38,7 @@ class AgentController:
         for agent_id in xrange(n_agents):
 
             # base
-            new_agent = Agent(agent_id, self.maze_shape)
+            new_agent = Agent(agent_id, self.maze_shape, configuration)
             new_agent.current_position = start_positions[agent_id]
             new_agent.goal_position = goal_positions[agent_id]
 
@@ -63,6 +63,8 @@ class AgentController:
                 expertness_modul = expertnessmodules.DistToGoal()
             elif configuration['expertness'] == 'Needed Steps':
                 expertness_modul = expertnessmodules.NeededSteps()
+            elif configuration['expertness'] == 'All The Same':
+                expertness_modul = expertnessmodules.AllTheSame()
             else:
                 return False, "AgentController: Couldn't find this expertness modul!"
 
@@ -71,11 +73,13 @@ class AgentController:
                 weighting_modul = weightingmodules.LearnFromAll()
             elif configuration['weighting'] == 'Learn From All Positive':
                 weighting_modul = weightingmodules.LearnFromAllPositive()
+            elif configuration['weighting'] == 'Learn From Experts':
+                weighting_modul = weightingmodules.LearningFromExperts()
             else:
                 return False, "AgentController: Couldn't find this weighting modul!"
 
             # Q reinforcement learning modul
-            qrl = QLearning(expertness_modul, weighting_modul)
+            qrl = QLearning(configuration, expertness_modul, weighting_modul)
 
             # exploration modul
             if configuration['exp'] == 'Random':
@@ -118,12 +122,6 @@ class AgentController:
         for agent in self.agent_list:
             agent.agent_list = self.agent_list
             agent.action_selection = configuration['action_selection']
-            agent.qrl.learn_rate = configuration['learn_rate']
-            agent.qrl.discount = configuration['discount']
-            agent.qrl.reward_wall = configuration['reward_wall']
-            agent.qrl.reward_step = configuration['reward_step']
-            # agent.qrl.reward_robot = configuration['reward_robot']
-            agent.qrl.reward_goal = configuration['reward_goal']
             agent.exp.exploration_rate = configuration['exploration_rate']
             agent.exp.exploration_type = configuration['exploration_type']
             agent.tau = configuration['tau']
@@ -139,12 +137,18 @@ class AgentController:
 
     def do_coop_learning(self, show_expertness):
         expertness_list = []
+        weight_mat = None
         for agent in self.agent_list:
             agent.qrl.create_Q_mat_new(self.agent_list)
         for agent in self.agent_list:
+            if weight_mat is None:
+                weight_mat = agent.qrl.weights
+            else:
+                weight_mat = numpy.row_stack((weight_mat, agent.qrl.weights))
             expertness_list.append(round(agent.qrl.expertness,3))
             agent.qrl.learn_Q_mat_new()
 
+        # print weight_mat
         if show_expertness:
             self.write_console('AgentController: Expertness of each agent: ' + str(expertness_list))
 

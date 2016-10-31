@@ -46,13 +46,13 @@ class AgentSettings:
         OM2.config(justify=LEFT)
     
         Label(self.frame, text="Expertness model").grid(row=1, column = 2)
-        OM3 = OptionMenu(self.frame, self.expertness, "Normal", "Absolute", "Positive", "Distance To Goal", 'Needed Steps')
+        OM3 = OptionMenu(self.frame, self.expertness, "Normal", "Absolute", "Positive", "Distance To Goal", 'Needed Steps', 'All The Same')
         OM3.config(width=20)
         OM3.grid(row=1,column = 3, sticky=EW)
         OM3.config(justify=LEFT)
     
         Label(self.frame, text="Weighting model").grid(row=2, column = 2)
-        OM4 = OptionMenu(self.frame, self.weighting, "Learn From All", "Learn From All Positive")
+        OM4 = OptionMenu(self.frame, self.weighting, "Learn From All", "Learn From All Positive", 'Learn From Experts')
         OM4.grid(row=2, column = 3, sticky=EW)
         OM4.config(justify=LEFT)
     
@@ -101,8 +101,10 @@ class SimulationSettings:
         self.LB2 = Listbox(frameSettings, exportselection=0)
         self.LB2.grid(row=1,column = 0, rowspan = 5)
         self.LB2.insert(END, "Static maze 1")
+        self.LB2.insert(END, "Static maze 2")
         self.LB2.insert(END, "Static maze 3")
         self.LB2.insert(END, "Static maze 4")
+        self.LB2.insert(END, "Small Test Maze")
         self.LB2.insert(END, "URMG")
         self.LB2.insert(END, "Depth-first search")
         self.LB2.insert(END, "DFS special")
@@ -234,11 +236,16 @@ class SimulationSettings:
         C31 = Checkbutton(frameSettings,variable=self.use_shared_Q)
         C31.grid(row = 1, column = 10)
 
-        Label(frameSettings, text="Cooperation type").grid(row=2, column = 9)
-        OM1 = OptionMenu(frameSettings, self.cooperation_type, 'Trials', "Steps")
-        OM1.config(width=10)
-        OM1.grid(row=2, column = 10, sticky=EW)
+        self.use_reward_matrix = IntVar()
+        self.use_reward_matrix.set(configuration.get('use_reward_matrix', 0))
+        Label(frameSettings, text="Use reward matrix").grid(row=2, column = 9)
+        C32 = Checkbutton(frameSettings, variable=self.use_reward_matrix)
+        C32.grid(row = 2, column = 10)
 
+        Label(frameSettings, text="Cooperation type").grid(row=3, column = 9)
+        OM1 = OptionMenu(frameSettings, self.cooperation_type, 'Trials', "Steps", 'None')
+        OM1.config(width=10)
+        OM1.grid(row=3, column = 10, sticky=EW)
         self.frame = frameSettings
 
     def get_configuration(self, configuration):
@@ -257,24 +264,11 @@ class SimulationSettings:
         configuration['iterations'] = self.E22.get()
         configuration['repetitions'] = int(self.E24.get())
         configuration['max_steps'] = int(self.E23.get())
+        configuration['cooperation_type'] = self.cooperation_type.get()
+        configuration['use_reward_matrix'] = self.use_reward_matrix.get()
 
     def LB2onSelect(self, evt):
         self.GUI.generate_new_maze()
-        return 0
-        '''
-        w = evt.widget
-        index = int(w.curselection()[0])
-        T1.config(state=NORMAL)
-        if index == 0:
-            T1.insert('1.0', 'Selected Static Maze 1\n')
-        if index == 1:
-            T1.insert('1.0', 'Selected Depth-first search maze | tree type, only one solution | Height and Width are doubled! \n')
-        if index == 2:
-            T1.insert('1.0', 'Selected Unknown Random Maze Generator | random maze with more than one solution \n')
-        if index == 3:
-            pass
-        T1.config(state=DISABLED)
-        '''
 
 
 class Buttons:
@@ -295,7 +289,7 @@ class Buttons:
         self.B4 = Button(simulation_settings_frame, text ="Show maze", command = GUI.show_maze)
         self.B4.grid(row=startRow, column=startColumn)
         
-        self.B5 = Button(simulation_settings_frame, text ="Plot data", command = GUI.plotData)
+        self.B5 = Button(simulation_settings_frame, text ="Plot data", command = GUI.plot_data)
         self.B5.grid(row=startRow, column=startColumn+9, columnspan=2)
         
         self.B6 = Button(simulation_settings_frame, text ="Visualize", command = GUI.visualize)

@@ -53,4 +53,11 @@ class NeededSteps(Expertness):
         pass
 
     def update_expertness(self, agent):
-        return 1000/float(agent.step_counter)
+        return float(agent.step_counter)
+
+class AllTheSame(Expertness):
+    def __init__(self):
+        pass
+
+    def update_expertness(self, agent):
+        return 1

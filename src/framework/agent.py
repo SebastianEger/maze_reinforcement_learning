@@ -1,7 +1,6 @@
 import numpy
 from src.framework.sensor import Sensor
 
-
 class Agent:
     mov = None  # Movement module
     qrl = None  # Q Reinforcement Learning module
@@ -11,16 +10,18 @@ class Agent:
     # variable how to select next action
     action_selection = 'Greedy'
 
-    def __init__(self, agent_id, maze_size):
+    def __init__(self, agent_id, maze_size, configuration):
         # dict which stores information about the agent
         self.info = dict()
         self.info['id'] = agent_id
         self.tau = 0.1
+        self.config = configuration
+        self.maze_shape = (maze_size[0], maze_size[1])
 
         self.step_counter = 0
         self.trial_counter = 0
 
-        # some interesting data variables
+        # some logged data variables
         self.history = []
         self.expertness_history = []
         self.steps_per_trial = []
@@ -49,6 +50,8 @@ class Agent:
         self.mov.init_agent_modules(self)
         self.qrl.init_agent_modules(self)
         self.exp.init_agent_modules(self)
+
+        self.qrl.init_reward_matrix(self.maze_shape)
 
     def run(self):
         if self.goal_reached():  # check if we reached the goal
@@ -80,7 +83,7 @@ class Agent:
                 #    self.step_counter += 1
                 #    break
 
-        # self.expertness_history.append(self.qrl.expertness)
+        self.expertness_history.append(self.qrl.expertness)
 
         if self.goal_reached():
             self.steps_per_trial.append(self.step_counter)
@@ -89,7 +92,11 @@ class Agent:
 
     def move(self, action, next_position):
         # step reward as default
-        reward = self.qrl.reward_step
+        use_reward_matrix = self.config.get('use_reward_matrix', 0)
+        if use_reward_matrix:
+            reward = self.qrl.reward_matrix[next_position[0], next_position[1]]
+        else:
+            reward = self.qrl.reward_step
 
         # check if goal position
         if [next_position[0], next_position[1]] in self.goal_position:  # check if target is goal

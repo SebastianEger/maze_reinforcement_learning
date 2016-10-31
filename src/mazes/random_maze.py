@@ -43,7 +43,7 @@ def maze(width=81, height=51, complexity=.75, density=.75):
 
 if __name__ == '__main__':
     M = maze(20,20,1,1)
-    print M[:,:,0]
+    print(M[:,:,0])
     plt.figure(figsize=(10, 5))
     plt.imshow(M[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
     plt.show()

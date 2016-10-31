@@ -3,6 +3,14 @@ import matplotlib.pyplot as plt
 from src.framework.maze import Maze
 
 
+
+def set_outer_walls(maze):
+    maze[0,:,0] = 1
+    maze[-1,:,0] = 1
+    maze[:,0,0] = 1
+    maze[:,-1,0] = 1
+
+
 class StaticMazeOne(Maze):
     def __init__(self):
        self.maze = self.get_maze()
@@ -27,6 +35,28 @@ class StaticMazeOne(Maze):
     def get_size(self):
         return [10, 10]
 
+def get_static_maze_1():
+    maze = np.zeros((17,17,3),dtype=np.uint8)
+    set_outer_walls(maze)
+
+    # vertical walls
+    maze[1:5, 4, 0] = 1
+    maze[8:13, 4, 0] = 1
+    maze[4:8, 8, 0] = 1
+    maze[12:16, 12, 0] = 1
+
+    # horizontal walls
+    maze[8, 4:13, 0] = 1
+    maze[12, 4:9, 0] = 1
+    maze[4, 12:16, 0] = 1
+
+    # start positions
+    maze[1, 1:4, 1] = 1
+
+    # goal position
+    maze[15,15, 2] = 1
+
+    return maze
 
 def get_static_maze_2():
     maze = np.zeros((17,20,5),dtype=np.uint8)
@@ -77,6 +107,7 @@ def get_static_maze_3():
 
     return maze
 
+
 def get_static_maze_4():
     maze = np.zeros((28,31,5),dtype=np.uint8)
     maze[0,:,0] = 1
@@ -101,11 +132,25 @@ def get_static_maze_4():
     maze[26,29,2] = 1
     return maze
 
+
+def get_small_test_maze(height, width):
+    maze = np.zeros((height, width, 3), dtype=np.uint8)
+
+    set_outer_walls(maze)
+
+    # start position
+    maze[1, 1, 1] = 1
+
+    # goal position
+    maze[-2, -2, 2] = 1
+
+    return maze
+
 if __name__ == '__main__':
     maze_1 = get_static_maze_2()
     #plt.figure(figsize=(17, 20))
     #plt.imshow(maze_1[:,:,0], cmap=plt.cm.binary, interpolation='nearest')
     #plt.show()
     points = np.where(maze_1[:,:,1]==1)
-    print points[0], points[1], len(points[0])
+    print(points[0], points[1], len(points[0]))
 

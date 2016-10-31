@@ -8,7 +8,7 @@ top.wm_title('Simulation panel')
 plt.ion()
 
 # load configuration file
-pkl_file = open('data.pkl', 'rb')
+pkl_file = open('configuration.pkl', 'rb')
 configuration = pickle.load(pkl_file)
 
 print 'Loaded configuration: ' + str(configuration)

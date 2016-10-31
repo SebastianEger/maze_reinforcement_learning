@@ -1,3 +1,10 @@
-A = [[0,1,0],]
-if [0,1,0] in A:
-    print 'test'
+
+import numpy
+
+
+mat = numpy.zeros((5,5))
+mat[3, 3] = 3
+
+mat[1,4] = 5.5
+
+print mat/mat.max()
