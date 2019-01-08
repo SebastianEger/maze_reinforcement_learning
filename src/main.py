@@ -1,5 +1,7 @@
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib import pyplot as plt
 from Tkinter import *
-import matplotlib.pyplot as plt
 import pickle
 from package.GUI.GUI import GUI
 

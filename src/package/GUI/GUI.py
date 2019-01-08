@@ -1,5 +1,7 @@
-# from Tkinter import *
-import matplotlib.pyplot as plt
+from Tkinter import *
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib import pyplot as plt
 import numpy, ttk, pickle, math
 from package.mazes import dfs_maze, random_maze, staticMazes
 import frames
@@ -26,12 +28,12 @@ class GUI:
 
         """ Progressbar """
         self.PB1 = ttk.Progressbar(top, orient="horizontal", mode="determinate")
-        self.PB1.grid(row=6, column=0, sticky=EW)
+        self.PB1.grid(row=6, column=0, sticky='EW')
         self.PB1["value"] = 0
         self.PB1["maximum"] = int(self.simulation_settings.E22.get())
 
         self.PB2 = ttk.Progressbar(top, orient="horizontal", mode="determinate")
-        self.PB2.grid(row=5, column=0, sticky=EW)
+        self.PB2.grid(row=5, column=0, sticky='EW')
         self.PB2["value"] = 0
         self.PB2["maximum"] = int(self.simulation_settings.E24.get())
 
