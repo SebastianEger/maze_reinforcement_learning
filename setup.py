@@ -14,9 +14,9 @@ setup(
     version='0.0.1',
     description='Q learning in maze environment',
     long_description=readme,
-    author='Kenneth Reitz',
-    author_email='me@kennethreitz.com',
-    url='https://github.com/kennethreitz/samplemod',
+    author='Sebastian Eger',
+    author_email='eger.sebsatian@gmx.de',
+    url='',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
